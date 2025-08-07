@@ -6,6 +6,7 @@ from typing import Any, Optional, Sequence, Tuple
 
 try:  # pragma: no cover - optional deps
     import pyautogui
+
     import pytesseract
 except Exception:  # pragma: no cover
     class pyautogui:  # type: ignore
@@ -34,10 +35,7 @@ except Exception:  # pragma: no cover
         def image_to_string(img):
             return ""
 
-from .clicker import click_option
-from .model_client import LocalModelClient
-from .stats import Stats
-from .utils import copy_image_to_clipboard
+
 
 
 def screenshot_region(region: Tuple[int, int, int, int]) -> Any:
@@ -78,10 +76,7 @@ def answer_question(
 
 
 # ---------------------------------------------------------------------------
-def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
-    """Focus ChatGPT input, paste *img*, and submit."""
-    pyautogui.click(*box)
-    copy_image_to_clipboard(img)
+
     pyautogui.hotkey("ctrl", "v")
     pyautogui.press("enter")
 
@@ -104,13 +99,6 @@ def read_chatgpt_response(
     return ""
 
 
-def _extract_letter(text: str) -> str:
-    for ch in text.upper():
-        if ch in "ABCD":
-            return ch
-    return ""
-
-
 def answer_question_via_chatgpt(
     quiz_region: Tuple[int, int, int, int],
     chatgpt_box: Tuple[int, int],
@@ -127,10 +115,3 @@ def answer_question_via_chatgpt(
     send_to_chatgpt(img, chatgpt_box)
     reply = read_chatgpt_response(response_region, timeout=timeout)
     letter = _extract_letter(reply)
-    if not letter:
-        raise ValueError("No valid answer letter detected")
-    idx = ord(letter) - ord("A")
-    click_option(option_base, idx, offset)
-    if stats:
-        stats.inc_questions()
-    return letter

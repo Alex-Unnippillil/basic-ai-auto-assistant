@@ -25,9 +25,7 @@ Use the GUI to start, pause, or stop the automation. All events are logged to
 For headless scripting on Windows, the `automation.answer_question` helper can
 be wired into a loop that:
 
-1. Screenshots the quiz region and pastes the image into a ChatGPT browser tab.
-2. Waits up to 20 s for the model reply via OCR (refreshing once on timeout).
-3. Clicks the answer option that matches the returned letter.
+
 
 ## Tests
 

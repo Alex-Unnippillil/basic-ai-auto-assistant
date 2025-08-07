@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+.venv/
+quiz_log.db

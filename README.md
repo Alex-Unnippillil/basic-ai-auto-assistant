@@ -1,8 +1,3 @@
-# Quiz Automation Starter
-
-This project provides a starting point for an application that watches a quiz,
-asks OpenAI's `o4-mini-high` model for answers, and automatically selects the
-correct option.
 
 ## Setup
 

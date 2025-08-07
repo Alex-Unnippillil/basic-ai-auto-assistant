@@ -6,7 +6,6 @@ from typing import Any, Optional, Sequence, Tuple
 
 try:  # pragma: no cover - optional deps
     import pyautogui
-
     import pytesseract
 except Exception:  # pragma: no cover
     class pyautogui:  # type: ignore
@@ -35,14 +34,36 @@ except Exception:  # pragma: no cover
         def image_to_string(img):
             return ""
 
+from .clicker import click_option
+from .model_client import LocalModelClient
+from .stats import Stats
 
 
+# ---------------------------------------------------------------------------
+# Helpers
 
 def screenshot_region(region: Tuple[int, int, int, int]) -> Any:
     """Capture *region* using pyautogui and return an image object."""
     left, top, _width, _height = region
     pyautogui.moveTo(left, top)
     return pyautogui.screenshot(region=region)
+
+
+def send_to_chatgpt(img: Any, chatgpt_box: Tuple[int, int]) -> None:
+    """Send *img* to the ChatGPT input box located at *chatgpt_box*."""
+    pyautogui.moveTo(*chatgpt_box)
+    pyautogui.click()
+    # Assume the image is already on the clipboard
+    pyautogui.hotkey("ctrl", "v")
+    pyautogui.press("enter")
+
+
+def _extract_letter(reply: str) -> str:
+    """Return the first A-D style letter found in *reply*."""
+    for ch in reply.upper():
+        if ch in "ABCD":
+            return ch
+    return "A"
 
 
 # ---------------------------------------------------------------------------
@@ -76,10 +97,7 @@ def answer_question(
 
 
 # ---------------------------------------------------------------------------
-
-    pyautogui.hotkey("ctrl", "v")
-    pyautogui.press("enter")
-
+# ChatGPT UI workflow
 
 def read_chatgpt_response(
     region: Tuple[int, int, int, int],
@@ -115,3 +133,8 @@ def answer_question_via_chatgpt(
     send_to_chatgpt(img, chatgpt_box)
     reply = read_chatgpt_response(response_region, timeout=timeout)
     letter = _extract_letter(reply)
+    idx = ord(letter.upper()) - ord("A")
+    click_option(option_base, idx, offset)
+    if stats:
+        stats.inc_questions()
+    return letter

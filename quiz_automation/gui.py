@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 from .config import settings
 from .region_selector import select_region
 from .watcher import Watcher
+from .runner import QuizRunner
 
 
 class QuizGUI:
@@ -40,17 +41,24 @@ class QuizGUI:
 
         self.event_queue: Queue = Queue()
         self.watcher: Optional[Watcher] = None
+        self.runner: Optional[QuizRunner] = None
 
     def start(self) -> None:
         self.status.setText("Running")
         region = select_region()
         self.watcher = Watcher(region, self.event_queue, settings)
         self.watcher.start()
+        # Placeholder coordinates for demo purposes; in a real application these
+        # would be gathered via the watcher or additional selectors.
+        self.runner = QuizRunner(region, (0, 0), region, ["A"], (0, 0))
+        self.runner.start()
 
     def pause(self) -> None:
         self.status.setText("Paused")
         if self.watcher:
             self.watcher.stop_flag.set()
+        if self.runner:
+            self.runner.stop_flag.set()
 
     def stop(self) -> None:
         self.status.setText("Stopped")
@@ -58,6 +66,10 @@ class QuizGUI:
             self.watcher.stop_flag.set()
             self.watcher.join()
             self.watcher = None
+        if self.runner:
+            self.runner.stop_flag.set()
+            self.runner.join()
+            self.runner = None
 
     def run(self) -> None:  # pragma: no cover - GUI loop
         self.window.show()

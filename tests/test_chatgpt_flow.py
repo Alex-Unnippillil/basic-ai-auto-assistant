@@ -1,3 +1,5 @@
+import pytest
+
 from quiz_automation import automation
 from quiz_automation.stats import Stats
 
@@ -11,7 +13,7 @@ def test_send_to_chatgpt(monkeypatch):
     monkeypatch.setattr(automation.pyautogui, "click", lambda x, y: calls.update(click=(x, y)))
     monkeypatch.setattr(automation.pyautogui, "hotkey", lambda *k: calls.update(hotkey=k))
     monkeypatch.setattr(automation.pyautogui, "press", lambda k: calls.update(press=k))
-    monkeypatch.setattr(automation.pyperclip, "copy", lambda data: calls.update(copied=data))
+    monkeypatch.setattr(automation, "copy_image_to_clipboard", lambda img: calls.update(copied=True))
     automation.send_to_chatgpt(DummyImage(), (10, 20))
     assert calls["click"] == (10, 20)
     assert calls["hotkey"] == ("ctrl", "v")
@@ -48,3 +50,14 @@ def test_answer_question_via_chatgpt(monkeypatch):
     assert letter == "C"
     assert clicked["idx"] == 2
     assert stats.summary()["questions"] == 1
+
+
+def test_answer_question_via_chatgpt_invalid_letter(monkeypatch):
+    monkeypatch.setattr(automation, "screenshot_region", lambda region: "img")
+    monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
+    monkeypatch.setattr(automation, "read_chatgpt_response", lambda region, timeout=20.0: "?")
+    clicked = {}
+    monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: clicked.setdefault("idx", idx))
+    with pytest.raises(ValueError):
+        automation.answer_question_via_chatgpt((0,0,1,1), (1,2), (2,2,1,1), ["A","B"], (5,5))
+    assert not clicked

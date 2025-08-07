@@ -1,4 +1,5 @@
 from queue import Queue
+import time
 
 from quiz_automation.config import Settings
 from quiz_automation.watcher import Watcher
@@ -36,3 +37,26 @@ def test_watcher_emits_event(monkeypatch):
     assert not q.empty()
     event = q.get()
     assert event[0] == "question"
+
+
+def test_watcher_pause_resume(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    monkeypatch.setattr("quiz_automation.watcher.mss.mss", lambda: DummyMSS())
+    cfg = Settings()
+    q: Queue = Queue()
+    watcher = Watcher((0, 0, 1, 1), q, cfg)
+    monkeypatch.setattr(watcher, "capture", lambda: "img")
+    monkeypatch.setattr(watcher, "ocr", lambda img: "text")
+    monkeypatch.setattr(watcher, "is_new_question", lambda text: True)
+    watcher.pause()
+    watcher.start()
+    time.sleep(0.1)
+    assert q.empty()
+
+    def fake_sleep(_):
+        watcher.stop()
+
+    monkeypatch.setattr("quiz_automation.watcher.time.sleep", fake_sleep)
+    watcher.resume()
+    watcher.join()
+    assert not q.empty()

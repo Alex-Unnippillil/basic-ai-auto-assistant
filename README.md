@@ -19,7 +19,9 @@ cp .env.example .env  # optional: adjust poll interval
 python run.py
 ```
 
-Use the GUI to start, pause, or stop the automation. All events are logged to
+On first run the helper `RegionSelector` will prompt for the quiz region and the
+ChatGPT response area and store the coordinates in `regions.json`. Use the GUI to
+start, pause, or resume the watcher thread. All events are logged to
 `quiz_log.db`.
 
 For headless scripting the `automation.answer_question_via_chatgpt` helper can
@@ -29,6 +31,7 @@ be wired into a loop that:
 2. Pastes the image into a ChatGPT window and submits it.
 3. Reads the model response by OCRing the ChatGPT output area.
 4. Clicks the answer option that matches the returned letter.
+5. Aborts without clicking if no valid letter is detected.
 
 ## Tests
 

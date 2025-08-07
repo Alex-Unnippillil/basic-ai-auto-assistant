@@ -57,6 +57,8 @@ class Watcher(Thread):
         self.event_queue = event_queue
         self.cfg = cfg
         self.stop_flag = Event()
+        self._running = Event()
+        self._running.set()
         self.last_hash = ""
         self.sct = mss.mss()
 
@@ -88,8 +90,24 @@ class Watcher(Thread):
             return True
         return False
 
+    def pause(self) -> None:
+        """Pause the watcher loop."""
+        self._running.clear()
+
+    def resume(self) -> None:
+        """Resume the watcher loop."""
+        self._running.set()
+
+    def stop(self) -> None:
+        """Signal the watcher loop to terminate."""
+        self.stop_flag.set()
+        self._running.set()
+
     def run(self) -> None:  # pragma: no cover - loop control tested separately
         while not self.stop_flag.is_set():
+            self._running.wait()
+            if self.stop_flag.is_set():
+                break
             img = self.capture()
             text = self.ocr(img)
             if self.is_new_question(text):

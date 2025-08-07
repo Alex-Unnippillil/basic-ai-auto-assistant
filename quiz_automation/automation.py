@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import time
+import json
 from typing import Any, Optional, Sequence, Tuple
+
+from .clicker import click_option
 
 try:  # pragma: no cover - optional deps
     import pyautogui
@@ -76,7 +79,13 @@ def answer_question(
 
 
 # ---------------------------------------------------------------------------
+# ChatGPT UI workflow helpers
 
+
+def send_to_chatgpt(img: Any, chatgpt_box: Tuple[int, int]) -> None:
+    """Paste *img* into the ChatGPT UI and submit."""
+    del img  # image is expected to be on the clipboard already
+    pyautogui.click(*chatgpt_box)
     pyautogui.hotkey("ctrl", "v")
     pyautogui.press("enter")
 
@@ -86,16 +95,35 @@ def read_chatgpt_response(
     *,
     timeout: float = 20.0,
     poll: float = 1.0,
+    logger: Optional[Logger] = None,
 ) -> str:
-    """OCR the ChatGPT answer area, refreshing on timeout."""
-    start = time.time()
-    while time.time() - start < timeout:
-        img = pyautogui.screenshot(region=region)
-        text = pytesseract.image_to_string(img).strip()
-        if text:
-            return text
-        time.sleep(poll)
+    """OCR the ChatGPT answer area, refreshing once on timeout.
+
+    If no text is found after a refresh, an empty string is returned and a
+    structured ``timeout`` event is emitted to ``logger`` when provided.
+    """
+
+    def _scan() -> str:
+        start = time.time()
+        while time.time() - start < timeout:
+            img = pyautogui.screenshot(region=region)
+            text = pytesseract.image_to_string(img).strip()
+            if text:
+                return text
+            time.sleep(poll)
+        return ""
+
+    text = _scan()
+    if text:
+        return text
+
     pyautogui.hotkey("ctrl", "r")
+    text = _scan()
+    if text:
+        return text
+
+    if logger:
+        logger.log("timeout", json.dumps({"region": region}))
     return ""
 
 
@@ -109,9 +137,26 @@ def answer_question_via_chatgpt(
     offset: int = 40,
     timeout: float = 20.0,
     stats: Optional[Stats] = None,
+    logger: Optional[Logger] = None,
 ) -> str:
-    """Send screenshot to ChatGPT UI and click the returned answer."""
+    """Send screenshot to ChatGPT UI and click the returned answer.
+
+    If no reply is obtained within ``timeout`` the question is skipped and an
+    empty string is returned. The caller can then continue processing further
+    questions.
+    """
+
     img = screenshot_region(quiz_region)
     send_to_chatgpt(img, chatgpt_box)
-    reply = read_chatgpt_response(response_region, timeout=timeout)
+    reply = read_chatgpt_response(
+        response_region, timeout=timeout, logger=logger
+    )
+    if not reply:
+        return ""
+
     letter = _extract_letter(reply)
+    idx = ord(letter.upper()) - ord("A")
+    click_option(option_base, idx, offset)
+    if stats:
+        stats.inc_questions()
+    return letter

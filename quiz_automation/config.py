@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment or .env."""
 
     poll_interval: float = 1.0
+    openai_api_key: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

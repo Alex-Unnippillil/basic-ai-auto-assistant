@@ -21,7 +21,6 @@ Use the GUI to start, pause, or stop the automation. All events are logged to
 For headless scripting on Windows, the `automation.answer_question` helper can
 be wired into a loop that:
 
-
 ## Tests
 
 ```bash

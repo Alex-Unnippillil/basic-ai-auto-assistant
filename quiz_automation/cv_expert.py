@@ -1,64 +1,54 @@
-"""Computer vision helpers for locating quiz UI elements."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Tuple
+"""Light‑weight computer vision helpers used in tests.
 
-try:  # pragma: no cover - optional heavy dependency
+The real project uses more advanced OpenCV based logic.  For the unit tests we
+only need a very small subset which is implemented here.
+"""
+
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
+
+import numpy as np
+
+try:  # pragma: no cover - OpenCV is optional
     import cv2  # type: ignore
-    import numpy as np  # type: ignore
 except Exception:  # pragma: no cover
     cv2 = None  # type: ignore
-    np = None  # type: ignore
 
 
 @dataclass
 class UIElement:
-    """Basic representation of a detected UI element."""
+    """Representation of a detected UI element."""
 
     name: str
-    bbox: Tuple[int, int, int, int]
+    box: Tuple[int, int, int, int]
     confidence: float
 
 
 class AdvancedUIDetector:
-    """Locate quiz checkboxes via simple template matching.
+    """Naive template based detector used for demonstration purposes."""
 
-    The implementation is intentionally lightweight so unit tests can mock
-    OpenCV calls.  A production version would include more robust handling and
-    additional heuristics.
-    """
-
-    def __init__(self, template_path: str | None = None) -> None:
-        self.template_path = template_path
+    def __init__(self, template_path: Optional[str] = None) -> None:
         self.template = None
         if template_path and cv2 is not None:
-            try:  # pragma: no cover - file IO
+            try:
                 self.template = cv2.imread(template_path, 0)
-            except Exception:
+            except Exception:  # pragma: no cover - file not found
                 self.template = None
 
-    def detect_elements(self, frame) -> List[UIElement]:
-        """Return a list of detected UI elements.
-
-        A real implementation would perform template matching and contour
-        analysis.  Here we simply return an empty list when OpenCV is missing or
-        when no template is supplied.
-        """
-
-        if cv2 is None or self.template is None:
+    def detect_elements(self, frame: Optional[np.ndarray]) -> List[UIElement]:
+        if self.template is None or cv2 is None or frame is None:
             return []
-        result = cv2.matchTemplate(frame, self.template, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        res = cv2.matchTemplate(frame, self.template, cv2.TM_CCOEFF_NORMED)
+        _min_val, max_val, _min_loc, max_loc = cv2.minMaxLoc(res)
         h, w = self.template.shape[:2]
-        if max_val > 0.8:
-            x, y = max_loc
-            return [UIElement("checkbox", (x, y, w, h), float(max_val))]
-        return []
+        box = (*max_loc, w, h)
+        return [UIElement("template", box, float(max_val))]
 
 
 class LayoutAnalyzer:
-    """Assign a simple confidence score for a set of UI elements."""
+    """Small helper that scores a layout of :class:`UIElement` objects."""
 
     @staticmethod
     def score_layout(elements: List[UIElement]) -> float:

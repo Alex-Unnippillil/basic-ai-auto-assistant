@@ -10,6 +10,9 @@ from . import automation
 from .automation import answer_question_via_chatgpt
 from .stats import Stats
 from .gui import QuizGUI
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class QuizRunner(threading.Thread):
@@ -65,6 +68,7 @@ class QuizRunner(threading.Thread):
                         stats=self.stats,
                     )
                 except Exception:
+                    logger.exception("Error while answering question")
                     self.stats.record_error()
                 finally:
                     if self.gui is not None:

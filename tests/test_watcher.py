@@ -31,7 +31,7 @@ def test_watcher_emits_event(monkeypatch):
     monkeypatch.setattr(w, "is_new_question", lambda text: True)
 
     def fake_sleep(_):
-        w.stop_flag.set()
+        w.stop()
 
     monkeypatch.setattr("quiz_automation.watcher.time.sleep", fake_sleep)
     w.run()

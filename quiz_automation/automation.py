@@ -35,6 +35,9 @@ except Exception:  # pragma: no cover
 
 from .utils import copy_image_to_clipboard, validate_region
 from .stats import Stats
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 __all__ = [
     "send_to_chatgpt",
@@ -63,7 +66,8 @@ def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
     if not hasattr(pyautogui, "moveTo"):
         raise RuntimeError("pyautogui not available")
 
-    copy_image_to_clipboard(img)
+    if not copy_image_to_clipboard(img):
+        raise RuntimeError("failed to copy image to clipboard")
     pyautogui.moveTo(*box)
     # ``hotkey`` is easier for tests to monkeypatch than writing characters
     pyautogui.hotkey("ctrl", "v")
@@ -155,6 +159,7 @@ def answer_question_via_chatgpt(
 
     # The model typically ends its reply with something like "Answer: B".
     letter = response.strip().split()[-1].upper() if response else "A"
+    logger.info("ChatGPT chose %s", letter)
     try:
         idx = options.index(letter)
     except ValueError:

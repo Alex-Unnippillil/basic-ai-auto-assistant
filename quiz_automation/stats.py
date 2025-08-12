@@ -3,6 +3,7 @@ from __future__ import annotations
 """Runtime statistics for quiz automation."""
 
 from dataclasses import dataclass, field
+from threading import Lock
 from typing import List
 import threading
 
@@ -11,17 +12,17 @@ import threading
 class Stats:
     """Container tracking per-question metrics.
 
-    The object stores lightweight statistics that can be safely updated from
-    worker threads without additional locking because all operations mutate
-    primitive types or append to lists.  Consumers such as the GUI read the
-    aggregated properties like :attr:`questions_answered` or
-    :attr:`average_time` to display live metrics.
+    The object internally protects its mutable state with a :class:`~threading.Lock`
+    so that worker threads can safely update statistics concurrently. Consumers
+    such as the GUI read the aggregated properties like
+    :attr:`questions_answered` or :attr:`average_time` to display live metrics.
     """
 
     question_times: List[float] = field(default_factory=list)
     token_counts: List[int] = field(default_factory=list)
     questions_answered: int = 0
     errors: int = 0
+    _lock: Lock = field(default_factory=Lock, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._lock = threading.Lock()

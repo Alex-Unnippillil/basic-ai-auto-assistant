@@ -10,6 +10,9 @@ from . import automation
 from .automation import answer_question_via_chatgpt
 from .stats import Stats
 from .gui import QuizGUI
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class QuizRunner(threading.Thread):
@@ -35,6 +38,10 @@ class QuizRunner(threading.Thread):
         self.stop_flag = threading.Event()
         self.stats = stats or Stats()
         self.gui = gui
+
+    def stop(self) -> None:
+        """Signal the runner to stop."""
+        self.stop_flag.set()
 
     # The behaviour of this method is tested indirectly via unit tests that
     # patch :func:`answer_question_via_chatgpt`, so it is excluded from coverage
@@ -65,6 +72,7 @@ class QuizRunner(threading.Thread):
                         stats=self.stats,
                     )
                 except Exception:
+                    logger.exception("Error while answering question")
                     self.stats.record_error()
                 finally:
                     if self.gui is not None:

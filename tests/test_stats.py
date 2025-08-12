@@ -11,9 +11,11 @@ def test_record_updates_counts_and_averages() -> None:
     stats.record(2.0, 6)
 
     assert stats.questions_answered == 2
-    # Average of [1.0, 2.0]
+    assert stats.total_time == pytest.approx(3.0)
+    assert stats.total_tokens == 10
+    # Average of recorded times
     assert stats.average_time == pytest.approx(1.5)
-    # Average of [4, 6]
+    # Average of recorded token counts
     assert stats.average_tokens == pytest.approx(5.0)
 
 

@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     openai_model: str = "o4-mini-high"
     openai_system_prompt: str = "Reply with JSON {'answer':'A|B|C|D'}"
     poll_interval: float = 1.0
-    model_name: str = "o4-mini-high"
     temperature: float = 0.0
 
     quiz_region: Region = Region(100, 100, 600, 400)
@@ -25,23 +24,6 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
 
-    @field_validator("quiz_region", "response_region", mode="before")
-    @classmethod
-    def _coerce_region(cls, v):
-        if isinstance(v, Region):
-            return v
-        if isinstance(v, (list, tuple)):
-            return Region(*v)
-        return v
-
-    @field_validator("chat_box", "option_base", mode="before")
-    @classmethod
-    def _coerce_point(cls, v):
-        if isinstance(v, Point):
-            return v
-        if isinstance(v, (list, tuple)):
-            return Point(*v)
-        return v
 
 
 # A module-level settings instance convenient for components that do not need

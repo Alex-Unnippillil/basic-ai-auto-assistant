@@ -79,6 +79,7 @@ def send_to_chatgpt(img: Any, box: Point) -> None:
 def read_chatgpt_response(
     response_region: Region,
     timeout: float = 20.0,
+    poll_interval: float = 0.5,
 ) -> str:
     """Return OCR'd text from ``response_region`` until non-empty or timeout.
 
@@ -88,6 +89,8 @@ def read_chatgpt_response(
         The screen rectangle containing ChatGPT's textual response.
     timeout:
         Maximum number of seconds to wait for a non-empty OCR result.
+    poll_interval:
+        Seconds to wait between OCR attempts.
 
     Returns
     -------
@@ -114,7 +117,7 @@ def read_chatgpt_response(
         text = pytesseract.image_to_string(img).strip()
         if text:
             return text
-        time.sleep(0.5)
+        time.sleep(poll_interval)
 
     raise TimeoutError("No response detected")
 
@@ -143,17 +146,19 @@ def answer_question_via_chatgpt(
     options: Sequence[str],
     option_base: Point,
     stats: Stats | None = None,
+    poll_interval: float = 0.5,
 ) -> str:
     """Send ``quiz_image`` to ChatGPT and click the model's chosen answer.
 
     The function blocks until text appears in ``response_region`` or raises a
     :class:`TimeoutError`.  The returned string is the letter that was clicked.
-    ``stats`` can be supplied to record per-question metrics.
+    ``stats`` can be supplied to record per-question metrics. ``poll_interval``
+    controls how frequently the ChatGPT response region is polled.
     """
 
     start = time.time()
     send_to_chatgpt(quiz_image, chatgpt_box)
-    response = read_chatgpt_response(response_region)
+    response = read_chatgpt_response(response_region, poll_interval=poll_interval)
     matches = re.findall(r"[A-D]", response.upper())
     letter = matches[-1] if matches else ""
 

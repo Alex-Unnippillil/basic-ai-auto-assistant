@@ -19,7 +19,7 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     monkeypatch.setattr(automation, "send_to_chatgpt", fake_send)
 
-    def fake_read(region, timeout=20.0):
+    def fake_read(region, timeout=20.0, poll_interval=0.5):
         calls["read"] += 1
         return "Answer A"
 

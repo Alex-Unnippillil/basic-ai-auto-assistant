@@ -39,15 +39,27 @@ def test_send_to_chatgpt_copy_failure(monkeypatch):
         automation.send_to_chatgpt("img", Point(0, 0))
 
 
-def test_read_chatgpt_response_success(monkeypatch):
-    """Return OCR text once non-empty."""
+def test_read_chatgpt_response_default_poll_interval(monkeypatch):
+    """Default ``poll_interval`` of 0.5 seconds is used."""
 
     monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
-    monkeypatch.setattr(automation, "pytesseract", types.SimpleNamespace(image_to_string=lambda img: " hello "))
+    responses = iter(["", " hello "])
+    monkeypatch.setattr(
+        automation,
+        "pytesseract",
+        types.SimpleNamespace(image_to_string=lambda img: next(responses)),
+    )
     monkeypatch.setattr(automation, "validate_region", lambda region: None)
+    sleeps: list[float] = []
+    monkeypatch.setattr(
+        automation,
+        "time",
+        types.SimpleNamespace(time=lambda: 0, sleep=lambda s: sleeps.append(s)),
+    )
 
-    text = automation.read_chatgpt_response(Region(0, 0, 1, 1), timeout=0.1)
+
     assert text == "hello"
+    assert sleeps == [0.5]
 
 
 def test_read_chatgpt_response_timeout(monkeypatch):
@@ -60,6 +72,29 @@ def test_read_chatgpt_response_timeout(monkeypatch):
 
     with pytest.raises(TimeoutError):
         automation.read_chatgpt_response(Region(0, 0, 1, 1), timeout=1.0)
+
+
+def test_read_chatgpt_response_custom_poll_interval(monkeypatch):
+    """A custom ``poll_interval`` is honoured."""
+
+    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
+    responses = iter(["", " hello "])
+    monkeypatch.setattr(
+        automation,
+        "pytesseract",
+        types.SimpleNamespace(image_to_string=lambda img: next(responses)),
+    )
+    monkeypatch.setattr(automation, "validate_region", lambda region: None)
+    sleeps: list[float] = []
+    monkeypatch.setattr(
+        automation,
+        "time",
+        types.SimpleNamespace(time=lambda: 0, sleep=lambda s: sleeps.append(s)),
+    )
+
+    text = automation.read_chatgpt_response((0, 0, 1, 1), poll_interval=0.1)
+    assert text == "hello"
+    assert sleeps == [0.1]
 
 
 def test_click_option_uses_clicker(monkeypatch):
@@ -99,7 +134,9 @@ def test_answer_question_fallback_to_first_option(monkeypatch):
 
     monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
     monkeypatch.setattr(
-        automation, "read_chatgpt_response", lambda region, timeout=20.0: "No option"
+        automation,
+        "read_chatgpt_response",
+        lambda region, timeout=20.0, poll_interval=0.5: "No option",
     )
 
     def fake_click_option(base, idx, offset=40):
@@ -113,4 +150,25 @@ def test_answer_question_fallback_to_first_option(monkeypatch):
 
     assert letter == "A"
     assert calls == [0]
+
+
+def test_answer_question_custom_poll_interval(monkeypatch):
+    """``answer_question_via_chatgpt`` forwards ``poll_interval``."""
+
+    calls: list[float] = []
+
+    monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
+
+    def fake_read(region, timeout=20.0, poll_interval=0.5):
+        calls.append(poll_interval)
+        return "Answer A"
+
+    monkeypatch.setattr(automation, "read_chatgpt_response", fake_read)
+    monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
+
+    letter = automation.answer_question_via_chatgpt(
+        "img", (0, 0), (0, 0, 1, 1), ["A", "B"], (0, 0), poll_interval=0.2
+    )
+    assert letter == "A"
+    assert calls == [0.2]
 

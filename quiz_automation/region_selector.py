@@ -36,9 +36,26 @@ class RegionSelector:
 
     def __post_init__(self) -> None:
         if self.path.exists():
-            with self.path.open("r", encoding="utf8") as fh:
-                data = json.load(fh)
-                self._regions = {k: tuple(v) for k, v in data.items()}
+            try:
+                with self.path.open("r", encoding="utf8") as fh:
+                    data = json.load(fh)
+                if isinstance(data, dict):
+                    regions: Dict[str, Tuple[int, int, int, int]] = {}
+                    for k, v in data.items():
+                        if (
+                            isinstance(k, str)
+                            and isinstance(v, (list, tuple))
+                            and len(v) == 4
+                            and all(isinstance(i, int) for i in v)
+                        ):
+                            regions[k] = tuple(v)  # type: ignore[arg-type]
+                        else:
+                            raise ValueError("invalid region data")
+                    self._regions = regions
+                else:
+                    raise ValueError("invalid region data")
+            except (OSError, json.JSONDecodeError, ValueError):
+                self._regions = {}
 
     def select(self, name: str) -> Tuple[int, int, int, int]:
         """Interactively select a region and persist it under ``name``.
@@ -55,8 +72,11 @@ class RegionSelector:
         region = (x1, y1, x2 - x1, y2 - y1)
 
         self._regions[name] = region
-        with self.path.open("w", encoding="utf8") as fh:
-            json.dump(self._regions, fh)
+        try:
+            with self.path.open("w", encoding="utf8") as fh:
+                json.dump(self._regions, fh)
+        except OSError:
+            pass
 
         return region
 

@@ -1,3 +1,4 @@
+import pytest
 import quiz_automation.region_selector as rs_mod
 
 
@@ -12,3 +13,19 @@ def test_region_selector_persistence(tmp_path, monkeypatch):
 
     selector2 = rs_mod.RegionSelector(path)
     assert selector2.load("quiz") == (1, 2, 4, 4)
+
+
+def test_region_selector_missing_file(tmp_path):
+    path = tmp_path / "coords.json"
+    selector = rs_mod.RegionSelector(path)
+    with pytest.raises(KeyError):
+        selector.load("quiz")
+
+
+@pytest.mark.parametrize("content", ["{not json", '{"quiz": [1, 2, 3]}' ])
+def test_region_selector_corrupted_file(tmp_path, content):
+    path = tmp_path / "coords.json"
+    path.write_text(content, encoding="utf8")
+    selector = rs_mod.RegionSelector(path)
+    with pytest.raises(KeyError):
+        selector.load("quiz")

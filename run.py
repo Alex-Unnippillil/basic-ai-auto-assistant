@@ -2,25 +2,10 @@
 from __future__ import annotations
 
 import argparse
-import os
-from typing import Tuple
 
 from quiz_automation import QuizGUI
+from quiz_automation.config import Settings
 from quiz_automation.runner import QuizRunner
-
-
-def _parse_tuple(env_name: str, default: Tuple[int, ...]) -> Tuple[int, ...]:
-    """Parse a comma-separated tuple from an environment variable."""
-
-    raw = os.getenv(env_name)
-    if raw:
-        try:
-            parts = tuple(int(p.strip()) for p in raw.split(","))
-            if len(parts) == len(default):
-                return parts
-        except ValueError:
-            pass
-    return default
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -48,12 +33,11 @@ def main(argv: list[str] | None = None) -> None:
         else:
             print("PySide6 is not available; running without GUI.")
     else:
-        quiz_region = _parse_tuple("QUIZ_REGION", (100, 100, 600, 400))
-        chat_box = _parse_tuple("CHAT_BOX", (800, 900))
-        response_region = _parse_tuple("RESPONSE_REGION", (100, 550, 600, 150))
-        option_base = _parse_tuple("OPTION_BASE", (100, 520))
+        cfg = Settings()
         options = list("ABCD")
-        runner = QuizRunner(quiz_region, chat_box, response_region, options, option_base)
+        runner = QuizRunner(
+            cfg.quiz_region, cfg.chat_box, cfg.response_region, options, cfg.option_base
+        )
         runner.start()
 
 

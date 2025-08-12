@@ -1,0 +1,14 @@
+Configuration values are loaded through `quiz_automation.config.Settings`.
+Screen-region defaults used by `run.py` can be overridden by setting
+environment variables before executing the tests. Provide values as
+comma-separated lists. For example:
+
+```
+export QUIZ_REGION="100,100,600,400"
+export CHAT_BOX="800,900"
+export RESPONSE_REGION="100,550,600,150"
+export OPTION_BASE="100,520"
+```
+
+The defaults defined in `Settings` are used when these variables are absent.
+

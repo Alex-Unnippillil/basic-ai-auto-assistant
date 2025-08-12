@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import logging
 
 from quiz_automation import QuizGUI
 from quiz_automation.runner import QuizRunner
 from quiz_automation.config import Settings
+from quiz_automation.logger import configure_logger
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -23,7 +25,19 @@ def main(argv: list[str] | None = None) -> None:
         default="gui",
         help="Choose whether to launch the GUI or run in headless mode.",
     )
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        help="Logging level for the application",
+    )
+    parser.add_argument(
+        "--config",
+        help="Path to a configuration file read by the Settings class",
+    )
     args = parser.parse_args(argv)
+
+    level = getattr(logging, args.log_level.upper(), logging.INFO)
+    configure_logger(level=level)
 
     if args.mode == "gui":
         gui = QuizGUI()
@@ -33,7 +47,7 @@ def main(argv: list[str] | None = None) -> None:
         else:
             print("PySide6 is not available; running without GUI.")
     else:
-        cfg = Settings()
+        cfg = Settings(_env_file=args.config) if args.config else Settings()
         options = list("ABCD")
         runner = QuizRunner(
             cfg.quiz_region,

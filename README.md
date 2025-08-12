@@ -54,7 +54,8 @@ Running the command in a headless environment only needs `pydantic`, `pydantic-s
 * `PySide6` – GUI for live statistics
 
 ### Running
-Invoke the script with a mode flag:
+Invoke the script with a mode flag. Optional arguments control logging and
+configuration loading:
 
 ```bash
 # headless
@@ -62,7 +63,14 @@ quiz-automation --mode headless
 
 # GUI
 quiz-automation --mode gui
+
+# custom config and debug logging
+quiz-automation --mode headless --log-level DEBUG --config settings.env
 ```
+
+`--log-level` sets the logging verbosity (e.g., ``DEBUG``, ``INFO``) and
+`--config` points to a ``.env``-style file loaded before instantiating the
+``Settings`` class.
 
 ## CLI example
 ```python

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 
-from quiz_automation.gui import QuizGUI
+from quiz_automation import QuizGUI
 
 
 def main(argv: list[str] | None = None) -> None:

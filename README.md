@@ -24,8 +24,7 @@ The requirements file installs everything needed to run the full automation.  Fo
 
 ## CLI example
 ```python
-from quiz_automation.automation import answer_question_via_chatgpt
-from quiz_automation.stats import Stats
+from quiz_automation import answer_question_via_chatgpt, Stats
 import pyautogui
 
 quiz_region = (100, 100, 600, 400)
@@ -42,8 +41,7 @@ This snippet grabs the current question, asks ChatGPT for help, and clicks the s
 
 ## GUI example
 ```python
-from quiz_automation.gui import QuizGUI
-from quiz_automation.runner import QuizRunner
+from quiz_automation import QuizGUI, QuizRunner
 
 quiz_region = (100, 100, 600, 400)
 chatgpt_box = (800, 900)

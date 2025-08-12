@@ -37,6 +37,7 @@ except Exception:  # pragma: no cover
 from .utils import copy_image_to_clipboard, validate_region
 from .stats import Stats
 from .logger import get_logger
+from .clicker import Clicker
 
 logger = get_logger(__name__)
 
@@ -123,7 +124,8 @@ def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
 
     ``base`` corresponds to the coordinates of the first option on screen.  The
     function increments the ``y`` coordinate by ``offset`` for each subsequent
-    option and performs a mouse click at the calculated position.
+    option and performs a mouse click at the calculated position via
+    :class:`~quiz_automation.clicker.Clicker`.
 
     Raises
     ------
@@ -131,12 +133,7 @@ def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
         If :mod:`pyautogui` is not available.
     """
 
-    if not hasattr(pyautogui, "moveTo"):
-        raise RuntimeError("pyautogui not available")
-
-    x, y = base
-    pyautogui.moveTo(x, y + index * offset)
-    pyautogui.click()
+    Clicker(base, offset).click_option(index)
 
 
 def answer_question_via_chatgpt(

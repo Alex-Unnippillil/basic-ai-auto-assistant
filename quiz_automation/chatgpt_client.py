@@ -1,9 +1,12 @@
 """Minimal OpenAI client wrapper with retry logic."""
 from __future__ import annotations
 
-import json
 import time
 from typing import Optional
+
+from typing import Literal
+
+from pydantic import BaseModel, ValidationError
 
 try:  # pragma: no cover - optional dependency
     from openai import OpenAI
@@ -13,21 +16,36 @@ except Exception:  # pragma: no cover
 from .config import settings
 
 
+class AnswerResponse(BaseModel):
+    """Model for validating a single-letter answer."""
+
+    answer: Literal["A", "B", "C", "D"]
+
+
 class ChatGPTClient:
     """Wrapper around the OpenAI SDK that returns a single-letter answer."""
 
-    def __init__(self, api_key: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        *,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+    ) -> None:
         if OpenAI is None:  # pragma: no cover
             raise RuntimeError("openai package not available")
         self.client = OpenAI(api_key=api_key or settings.openai_api_key)
+        self.model = model or settings.openai_model
+        self.temperature = temperature if temperature is not None else settings.openai_temperature
 
     def _completion(self, prompt: str) -> str:
         response = self.client.responses.create(
-            model="o4-mini-high",
+            model=self.model,
             input=[
                 {"role": "system", "content": "Reply with JSON {'answer':'A|B|C|D'}"},
                 {"role": "user", "content": prompt},
             ],
+            temperature=self.temperature,
         )
         return response.output_text
 
@@ -36,8 +54,10 @@ class ChatGPTClient:
         for attempt in range(retries):
             try:
                 raw = self._completion(prompt)
-                data = json.loads(raw)
-                return data["answer"]
+                data = AnswerResponse.model_validate_json(raw)
+                return data.answer
+            except ValidationError as exc:
+                raise ValueError("Invalid model response") from exc
             except Exception:
                 time.sleep(2**attempt)
         raise RuntimeError("Failed to get model response")

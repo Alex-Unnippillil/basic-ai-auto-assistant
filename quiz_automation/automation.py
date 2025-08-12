@@ -155,14 +155,14 @@ def answer_question_via_chatgpt(
     send_to_chatgpt(quiz_image, chatgpt_box)
     response = read_chatgpt_response(response_region)
     matches = re.findall(r"[A-D]", response.upper())
-    letter = matches[-1] if matches else ""
+    letter = matches[-1] if matches else "A"
 
     try:
         idx = options.index(letter)
     except ValueError:
         # Fall back to alphabetical ordering; ensures a valid index even if the
         # model returns an unexpected string such as "E".
-        idx = max(0, ord(letter) - ord("A"))
+        idx = max(0, ord(letter) - ord("A")) if letter else 0
 
     click_option(option_base, idx)
     logger.info("ChatGPT chose %s", letter)

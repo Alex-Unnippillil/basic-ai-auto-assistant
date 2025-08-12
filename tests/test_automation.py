@@ -90,3 +90,25 @@ def test_click_option_missing_pyautogui(monkeypatch):
     with pytest.raises(RuntimeError):
         automation.click_option((0, 0), 0)
 
+
+def test_answer_question_defaults_to_a(monkeypatch):
+    """When no letter A-D is found the first option is chosen."""
+
+    clicks = []
+    monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
+    monkeypatch.setattr(
+        automation, "read_chatgpt_response", lambda region, timeout=20.0: "zzz"
+    )
+
+    def fake_click(base, index, offset=40):
+        clicks.append(index)
+
+    monkeypatch.setattr(automation, "click_option", fake_click)
+
+    letter = automation.answer_question_via_chatgpt(
+        "img", (0, 0), (0, 0, 0, 0), ["A", "B", "C", "D"], (10, 10)
+    )
+
+    assert letter == "A"
+    assert clicks == [0]
+

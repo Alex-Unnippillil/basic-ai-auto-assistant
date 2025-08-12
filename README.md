@@ -22,6 +22,42 @@ The requirements file installs everything needed to run the full automation.  Fo
 * `opencv-python` – computer‑vision helpers
 * `PySide6` – GUI for live statistics
 
+## `quiz-automation` command
+The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
+
+### Environment variables
+Set `OPENAI_API_KEY` for access to the OpenAI API.  Additional settings read by the tool include `OPENAI_MODEL`, `OPENAI_SYSTEM_PROMPT`, `POLL_INTERVAL`, `MODEL_NAME`, and `TEMPERATURE`.
+
+An example `.env` file:
+
+```dotenv
+OPENAI_API_KEY=sk-your-api-key
+OPENAI_MODEL=o4-mini-high
+# OPENAI_SYSTEM_PROMPT="Reply with JSON {'answer':'A|B|C|D'}"
+# POLL_INTERVAL=1.0
+# MODEL_NAME=o4-mini-high
+# TEMPERATURE=0.0
+```
+
+### Optional dependencies
+Running the command in a headless environment only needs `pydantic`, `pydantic-settings`, and `mss`.  Installing the following extras enables full desktop automation:
+
+* `pyautogui` – screen control and screenshots
+* `pytesseract` – OCR for ChatGPT's responses
+* `opencv-python` – computer‑vision helpers
+* `PySide6` – GUI for live statistics
+
+### Running
+Invoke the script with a mode flag:
+
+```bash
+# headless
+quiz-automation --mode headless
+
+# GUI
+quiz-automation --mode gui
+```
+
 ## CLI example
 ```python
 from quiz_automation.automation import answer_question_via_chatgpt

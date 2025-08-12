@@ -39,6 +39,10 @@ class QuizRunner(threading.Thread):
         self.stats = stats or Stats()
         self.gui = gui
 
+    def stop(self) -> None:
+        """Signal the runner to stop."""
+        self.stop_flag.set()
+
     # The behaviour of this method is tested indirectly via unit tests that
     # patch :func:`answer_question_via_chatgpt`, so it is excluded from coverage
     def run(self) -> None:  # pragma: no cover

@@ -54,7 +54,12 @@ def main(argv: list[str] | None = None) -> None:
         option_base = _parse_tuple("OPTION_BASE", (100, 520))
         options = list("ABCD")
         runner = QuizRunner(quiz_region, chat_box, response_region, options, option_base)
-        runner.start()
+        try:
+            runner.start()
+            runner.join()
+        except KeyboardInterrupt:
+            runner.stop()
+            runner.join()
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     poll_interval: float = 1.0
     model_name: str = "o4-mini-high"
     temperature: float = 0.0
+    ocr_backend: str | None = None
 
     quiz_region: tuple[int, int, int, int] = (100, 100, 600, 400)
     chat_box: tuple[int, int] = (800, 900)

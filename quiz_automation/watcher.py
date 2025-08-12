@@ -9,7 +9,7 @@ from queue import Queue
 from typing import Tuple
 
 from .config import Settings
-from .ocr import OCRBackend, PytesseractOCR
+from .ocr import OCRBackend, get_backend
 from .utils import hash_text
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class Watcher(threading.Thread):
         self.stop_flag = threading.Event()
         self.pause_flag = threading.Event()
         self._last_hash: str | None = None
-        self.ocr_backend = ocr or PytesseractOCR()
+        self.ocr_backend = ocr or get_backend(cfg.ocr_backend)
 
     # -- basic helpers -------------------------------------------------
     def capture(self):

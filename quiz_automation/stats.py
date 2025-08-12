@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import List
+import threading
 
 
 @dataclass
@@ -22,30 +23,37 @@ class Stats:
     questions_answered: int = 0
     errors: int = 0
 
+    def __post_init__(self) -> None:
+        self._lock = threading.Lock()
+
     def record(self, duration: float, tokens: int) -> None:
         """Record timing and token usage for a successful question."""
 
-        self.questions_answered += 1
-        self.question_times.append(duration)
-        self.token_counts.append(tokens)
+        with self._lock:
+            self.questions_answered += 1
+            self.question_times.append(duration)
+            self.token_counts.append(tokens)
 
     def record_error(self) -> None:
         """Increment the error counter."""
 
-        self.errors += 1
+        with self._lock:
+            self.errors += 1
 
     @property
     def average_time(self) -> float:
         """Return the average time taken per question."""
 
-        if not self.question_times:
-            return 0.0
-        return sum(self.question_times) / len(self.question_times)
+        with self._lock:
+            if not self.question_times:
+                return 0.0
+            return sum(self.question_times) / len(self.question_times)
 
     @property
     def average_tokens(self) -> float:
         """Return the average tokens used per question."""
 
-        if not self.token_counts:
-            return 0.0
-        return sum(self.token_counts) / len(self.token_counts)
+        with self._lock:
+            if not self.token_counts:
+                return 0.0
+            return sum(self.token_counts) / len(self.token_counts)

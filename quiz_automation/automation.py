@@ -35,6 +35,9 @@ except Exception:  # pragma: no cover
 
 from .utils import copy_image_to_clipboard, validate_region
 from .stats import Stats
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 __all__ = [
     "send_to_chatgpt",
@@ -155,6 +158,7 @@ def answer_question_via_chatgpt(
 
     # The model typically ends its reply with something like "Answer: B".
     letter = response.strip().split()[-1].upper() if response else "A"
+    logger.info("ChatGPT chose %s", letter)
     try:
         idx = options.index(letter)
     except ValueError:

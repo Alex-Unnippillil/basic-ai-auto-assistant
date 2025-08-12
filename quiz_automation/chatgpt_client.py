@@ -6,11 +6,22 @@ import time
 from typing import Optional
 
 try:  # pragma: no cover - optional dependency
-    from openai import OpenAI
+    from openai import (
+        APITimeoutError,
+        APIConnectionError,
+        RateLimitError,
+        OpenAI,
+    )
 except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
+    APITimeoutError = APIConnectionError = RateLimitError = ()  # type: ignore
 
 from .config import settings
+
+if isinstance(APITimeoutError, type):
+    TRANSIENT_ERRORS = (APITimeoutError, APIConnectionError, RateLimitError, TimeoutError, ConnectionError)
+else:  # pragma: no cover - openai not installed
+    TRANSIENT_ERRORS = (TimeoutError, ConnectionError)
 
 
 class ChatGPTClient:
@@ -23,21 +34,45 @@ class ChatGPTClient:
 
     def _completion(self, prompt: str) -> str:
         response = self.client.responses.create(
-            model="o4-mini-high",
+            model=settings.openai_model,
             input=[
-                {"role": "system", "content": "Reply with JSON {'answer':'A|B|C|D'}"},
+                {"role": "system", "content": settings.openai_system_prompt},
                 {"role": "user", "content": prompt},
             ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "quiz_answer",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "answer": {
+                                "type": "string",
+                                "enum": ["A", "B", "C", "D"],
+                            }
+                        },
+                        "required": ["answer"],
+                        "additionalProperties": False,
+                    },
+                },
+            },
         )
         return response.output_text
 
     def ask(self, prompt: str, retries: int = 3) -> str:
         """Return the model's single-letter answer with basic retries."""
-        for attempt in range(retries):
+        for attempt in range(1, retries + 1):
             try:
                 raw = self._completion(prompt)
                 data = json.loads(raw)
-                return data["answer"]
-            except Exception:
-                time.sleep(2**attempt)
+                answer = data.get("answer")
+                if answer not in {"A", "B", "C", "D"}:
+                    raise ValueError("answer must be one of A, B, C, D")
+                return answer
+            except TRANSIENT_ERRORS as exc:
+                if attempt == retries:
+                    raise RuntimeError(f"OpenAI transient error: {exc}") from exc
+                time.sleep(2 ** (attempt - 1))
+            except Exception as exc:
+                raise RuntimeError(f"Invalid model response: {exc}") from exc
         raise RuntimeError("Failed to get model response")

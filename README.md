@@ -57,6 +57,31 @@ runner.start()             # capture + worker threads
 ```
 The window updates with question count, average response time, tokens, and errors as the runner progresses.
 
+## Running the entry script
+
+`run.py` provides a small command-line interface.  The required screen regions and
+answer options are read from environment variables or passed as arguments:
+
+```bash
+export QUIZ_REGION=100,100,600,400
+export CHATGPT_BOX=800,900
+export RESPONSE_REGION=100,550,600,150
+export OPTION_BASE=100,520
+export OPTIONS=ABCD
+python run.py --mode headless
+```
+
+Each setting can also be specified directly on the command line:
+
+```bash
+python run.py --mode headless \
+    --quiz-region 100,100,600,400 \
+    --chatgpt-box 800,900 \
+    --response-region 100,550,600,150 \
+    --option-base 100,520 \
+    --options ABCD
+```
+
 ## Tests
 Run the test suite with:
 ```bash

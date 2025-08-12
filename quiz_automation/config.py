@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     """Read configuration from environment variables."""
 
     openai_api_key: str | None = None
+    openai_model: str = "o4-mini-high"
     poll_interval: float = 1.0
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")

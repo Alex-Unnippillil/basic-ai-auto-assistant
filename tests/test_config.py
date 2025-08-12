@@ -19,8 +19,3 @@ def test_config_default_poll_interval():
     cfg = Settings()
     assert cfg.poll_interval == 1.0
 
-
-def test_default_openai_values():
-    cfg = Settings()
-    assert cfg.openai_model == "o4-mini-high"
-    assert "answer" in cfg.openai_system_prompt

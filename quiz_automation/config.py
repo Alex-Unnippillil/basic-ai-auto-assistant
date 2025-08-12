@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     openai_model: str = "o4-mini-high"
     openai_system_prompt: str = "Reply with JSON {'answer':'A|B|C|D'}"
     poll_interval: float = 1.0
+    model_name: str = "o4-mini-high"
+    temperature: float = 0.0
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
 

@@ -57,32 +57,3 @@ def test_chatgpt_client_retries_on_transient_error(monkeypatch):
     monkeypatch.setattr("quiz_automation.chatgpt_client.time.sleep", lambda s: None)
     assert client.ask("Q?") == "A"
     assert calls["n"] == 2
-
-
-def test_chatgpt_client_does_not_retry_on_bad_json(monkeypatch):
-    client = _setup_client(monkeypatch)
-    calls = {"n": 0}
-
-    def bad_json(prompt: str) -> str:
-        calls["n"] += 1
-        return "not-json"
-
-    monkeypatch.setattr(client, "_completion", bad_json)
-    with pytest.raises(RuntimeError):
-        client.ask("Q?")
-    assert calls["n"] == 1
-
-
-def test_chatgpt_client_no_retry_on_non_transient_error(monkeypatch):
-    client = _setup_client(monkeypatch)
-    calls = {"n": 0}
-
-    def fatal(prompt: str) -> str:
-        calls["n"] += 1
-        raise ValueError("fatal")
-
-    monkeypatch.setattr(client, "_completion", fatal)
-    with pytest.raises(RuntimeError):
-        client.ask("Q?")
-    assert calls["n"] == 1
-

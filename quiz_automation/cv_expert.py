@@ -4,12 +4,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Tuple
 
+from .logger import get_logger
+
 try:  # pragma: no cover - optional heavy dependency
     import cv2  # type: ignore
     import numpy as np  # type: ignore
 except Exception:  # pragma: no cover
     cv2 = None  # type: ignore
     np = None  # type: ignore
+    get_logger(__name__).warning("OpenCV not available; computer vision disabled")
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -36,6 +41,7 @@ class AdvancedUIDetector:
             try:  # pragma: no cover - file IO
                 self.template = cv2.imread(template_path, 0)
             except Exception:
+                logger.exception("Failed to read template at %s", template_path)
                 self.template = None
 
     def detect_elements(self, frame) -> List[UIElement]:

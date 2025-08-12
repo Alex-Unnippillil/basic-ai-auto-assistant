@@ -9,11 +9,15 @@ from typing import Tuple
 
 from .config import Settings
 from .utils import hash_text
+from .logger import get_logger
 
 try:  # pragma: no cover - optional dependency
     from mss import mss
 except Exception:  # pragma: no cover
     mss = None  # type: ignore
+    get_logger(__name__).warning("mss not available; screen capture disabled")
+
+logger = get_logger(__name__)
 
 
 def _mss():  # pragma: no cover - tiny wrapper for easier monkeypatching

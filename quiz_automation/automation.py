@@ -13,6 +13,8 @@ from __future__ import annotations
 from typing import Any, Sequence, Tuple
 import time
 
+from .logger import get_logger
+
 try:  # pragma: no cover - optional heavy dependency
     import pyautogui  # type: ignore
     import pytesseract  # type: ignore
@@ -22,6 +24,10 @@ except Exception:  # pragma: no cover
     # be exercised.  Each attribute mimics the interface used in this module
     # which allows the tests to monkeypatch behaviour if required.
     from types import SimpleNamespace
+
+    get_logger(__name__).warning(
+        "pyautogui or pytesseract not available; using no-op stubs"
+    )
 
     pyautogui = SimpleNamespace(  # type: ignore[attr-defined]
         screenshot=lambda *_, **__: None,
@@ -35,6 +41,8 @@ except Exception:  # pragma: no cover
 
 from .utils import copy_image_to_clipboard, validate_region
 from .stats import Stats
+
+logger = get_logger(__name__)
 
 __all__ = [
     "send_to_chatgpt",

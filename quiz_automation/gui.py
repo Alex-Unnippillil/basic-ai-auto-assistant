@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from typing import Optional
 
+from .logger import get_logger
+
 try:  # pragma: no cover - optional graphical dependency
     from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 except Exception:  # pragma: no cover - fall back when Qt is unavailable
     QApplication = QLabel = QVBoxLayout = QWidget = None  # type: ignore
+    get_logger(__name__).warning("PySide6 not available; GUI features disabled")
 
 from .stats import Stats
+
+logger = get_logger(__name__)
 
 
 class QuizGUI:

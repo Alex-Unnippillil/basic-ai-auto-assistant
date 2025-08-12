@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     openai_api_key: str | None = None
     poll_interval: float = 1.0
+    log_level: str = "INFO"
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
 

@@ -5,12 +5,17 @@ import json
 import time
 from typing import Optional
 
+from .logger import get_logger
+
 try:  # pragma: no cover - optional dependency
     from openai import OpenAI
 except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
+    get_logger(__name__).warning("openai package not available; ChatGPTClient disabled")
 
 from .config import settings
+
+logger = get_logger(__name__)
 
 
 class ChatGPTClient:
@@ -39,5 +44,7 @@ class ChatGPTClient:
                 data = json.loads(raw)
                 return data["answer"]
             except Exception:
+                logger.exception("OpenAI request failed on attempt %s", attempt + 1)
                 time.sleep(2**attempt)
+        logger.error("Failed to get model response")
         raise RuntimeError("Failed to get model response")

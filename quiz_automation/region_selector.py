@@ -13,12 +13,17 @@ from pathlib import Path
 from typing import Dict, Tuple
 import json
 
+from .logger import get_logger
+
 try:  # pragma: no cover - optional dependency
     import pyautogui  # type: ignore
 except Exception:  # pragma: no cover
     from types import SimpleNamespace
 
+    get_logger(__name__).warning("pyautogui not available; using dummy positions")
     pyautogui = SimpleNamespace(position=lambda: (0, 0))  # type: ignore[attr-defined]
+
+logger = get_logger(__name__)
 
 
 @dataclass

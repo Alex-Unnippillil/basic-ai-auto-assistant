@@ -8,6 +8,10 @@ import subprocess
 import sys
 from typing import Any, Tuple
 
+from .logger import get_logger
+
+logger = get_logger(__name__)
+
 
 def hash_text(text: str) -> str:
     """Return a SHA256 hash for *text*."""
@@ -43,7 +47,7 @@ def copy_image_to_clipboard(img: Any) -> None:
             win32clipboard.CloseClipboard()
             return
         except Exception:  # pragma: no cover - fallback below
-            pass
+            logger.debug("win32 clipboard copy failed", exc_info=True)
 
     # macOS: pipe PNG data to ``pbcopy``
     if sys.platform == "darwin":
@@ -56,7 +60,7 @@ def copy_image_to_clipboard(img: Any) -> None:
             proc.wait()
             return
         except Exception:  # pragma: no cover
-            pass
+            logger.debug("pbcopy not available", exc_info=True)
 
     # Linux: rely on xclip if present
     try:
@@ -70,7 +74,7 @@ def copy_image_to_clipboard(img: Any) -> None:
         proc.wait()
         return
     except Exception:  # pragma: no cover - fall back below
-        pass
+        logger.debug("xclip not available", exc_info=True)
 
     # Fallback: encode PNG as base64 and copy via pyperclip
     try:  # pragma: no cover - lightweight fallback
@@ -80,4 +84,4 @@ def copy_image_to_clipboard(img: Any) -> None:
         img.save(buf, format="PNG")
         pyperclip.copy(base64.b64encode(buf.getvalue()).decode("ascii"))
     except Exception:  # pragma: no cover - nothing else we can do
-        pass
+        logger.warning("Failed to copy image to clipboard via pyperclip", exc_info=True)

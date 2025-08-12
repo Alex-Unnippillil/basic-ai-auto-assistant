@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence, Tuple
 import time
+import re
 
 try:  # pragma: no cover - optional heavy dependency
     import pyautogui  # type: ignore
@@ -154,7 +155,8 @@ def answer_question_via_chatgpt(
     response = read_chatgpt_response(response_region)
 
     # The model typically ends its reply with something like "Answer: B".
-    letter = response.strip().split()[-1].upper() if response else "A"
+    match = re.search(r"[A-D]", response[::-1], re.I) if response else None
+    letter = match.group().upper() if match else "A"
     try:
         idx = options.index(letter)
     except ValueError:

@@ -5,3 +5,23 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "basic-ai-auto-assistant"
 version = "0.1.0"
+description = "Automation helpers for multiple-choice quizzes."
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "pydantic",
+    "pydantic-settings",
+    "mss",
+]
+
+[project.optional-dependencies]
+full = [
+    "pyautogui",
+    "pytesseract",
+    "opencv-python",
+    "PySide6",
+]
+
+[project.scripts]
+quiz-automation = "run:main"

@@ -5,8 +5,3 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "basic-ai-auto-assistant"
 version = "0.1.0"
-description = "A lightweight quiz automation assistant."
-requires-python = ">=3.10"
-
-[project.scripts]
-quiz-automation = "run:main"

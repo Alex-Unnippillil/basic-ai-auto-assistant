@@ -1,2 +1,0 @@
-# Basic AI Auto Assistant
-

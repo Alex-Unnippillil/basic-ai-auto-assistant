@@ -7,6 +7,7 @@ import pytest
 
 from quiz_automation import watcher as watcher_module
 from quiz_automation.config import Settings
+import quiz_automation.ocr as ocr_module
 from quiz_automation.ocr import PytesseractOCR
 from quiz_automation.watcher import Watcher
 from quiz_automation.types import Region
@@ -23,6 +24,21 @@ def test_default_ocr_backend(monkeypatch):
     cfg = Settings()
     w = Watcher(Region(0, 0, 1, 1), Queue(), cfg)
     assert isinstance(w.ocr_backend, PytesseractOCR)
+
+
+def test_configured_ocr_backend(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    monkeypatch.setattr(watcher_module, "_mss", lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})())
+    monkeypatch.setattr(ocr_module, "_BACKENDS", dict(ocr_module._BACKENDS))
+
+    class DummyBackend:
+        def __call__(self, img):  # pragma: no cover - simple stub
+            return "dummy"
+
+    ocr_module.register_backend("dummy", DummyBackend)
+    cfg = Settings(ocr_backend="dummy")
+    w = Watcher((0, 0, 1, 1), Queue(), cfg)
+    assert isinstance(w.ocr_backend, DummyBackend)
 
 
 def test_watcher_is_new_question(monkeypatch):

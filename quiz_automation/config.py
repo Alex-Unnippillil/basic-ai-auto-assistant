@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     openai_system_prompt: str = "Reply with JSON {'answer':'A|B|C|D'}"
     poll_interval: float = 1.0
     temperature: float = 0.0
+    ocr_backend: str | None = None
 
     quiz_region: Region = Region(100, 100, 600, 400)
     chat_box: Point = Point(800, 900)

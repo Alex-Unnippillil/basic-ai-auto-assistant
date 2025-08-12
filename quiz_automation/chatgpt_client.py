@@ -23,7 +23,8 @@ class ChatGPTClient:
 
     def _completion(self, prompt: str) -> str:
         response = self.client.responses.create(
-            model="o4-mini-high",
+            model=settings.model_name,
+            temperature=settings.temperature,
             input=[
                 {"role": "system", "content": "Reply with JSON {'answer':'A|B|C|D'}"},
                 {"role": "user", "content": prompt},

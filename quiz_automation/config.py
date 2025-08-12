@@ -10,6 +10,8 @@ class Settings(BaseSettings):
 
     openai_api_key: str | None = None
     poll_interval: float = 1.0
+    model_name: str = "o4-mini-high"
+    temperature: float = 0.0
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
 

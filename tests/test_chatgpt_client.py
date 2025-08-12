@@ -38,3 +38,26 @@ def test_chatgpt_client_retries_on_error(monkeypatch):
     monkeypatch.setattr("quiz_automation.chatgpt_client.time.sleep", lambda s: None)
     assert client.ask("Q?") == "A"
     assert calls["n"] == 2
+
+
+def test_chatgpt_client_passes_model_and_temperature(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    monkeypatch.setattr(chatgpt_client, "OpenAI", DummyOpenAI)
+
+    captured: dict = {}
+
+    def fake_create(**kwargs):
+        captured.update(kwargs)
+        class R:
+            output_text = ""
+        return R()
+
+    monkeypatch.setattr(DummyOpenAI.responses, "create", staticmethod(fake_create))
+    monkeypatch.setattr(chatgpt_client.settings, "model_name", "gpt-test")
+    monkeypatch.setattr(chatgpt_client.settings, "temperature", 0.7)
+
+    client = ChatGPTClient()
+    client._completion("Q?")
+
+    assert captured["model"] == "gpt-test"
+    assert captured["temperature"] == 0.7

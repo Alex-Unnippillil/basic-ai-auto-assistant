@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from quiz_automation.utils import copy_image_to_clipboard, hash_text, validate_region
+from quiz_automation.types import Region
 
 
 def test_hash_text_consistent():
@@ -165,5 +166,5 @@ def test_copy_image_failure(monkeypatch, caplog):
 
 def test_validate_region_errors():
     with pytest.raises(ValueError):
-        validate_region((0, 0, 0, 10))
+        validate_region(Region(0, 0, 0, 10))
 

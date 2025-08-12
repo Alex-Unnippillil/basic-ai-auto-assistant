@@ -10,7 +10,7 @@ project and in the unit tests.
 
 from __future__ import annotations
 
-from typing import Any, Sequence, Tuple
+from typing import Any, Sequence
 import time
 import re
 
@@ -38,6 +38,7 @@ from .utils import copy_image_to_clipboard, validate_region
 from .stats import Stats
 from .logger import get_logger
 from .clicker import Clicker
+from .types import Point, Region
 
 logger = get_logger(__name__)
 
@@ -49,7 +50,7 @@ __all__ = [
 ]
 
 
-def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
+def send_to_chatgpt(img: Any, box: Point) -> None:
     """Paste *img* into the ChatGPT input box located at ``box``.
 
     Parameters
@@ -57,7 +58,7 @@ def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
     img:
         Image object to be pasted into the ChatGPT input box.
     box:
-        ``(x, y)`` screen coordinates for the chat input area.
+        Screen coordinates for the chat input area.
 
     Raises
     ------
@@ -76,7 +77,7 @@ def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
 
 
 def read_chatgpt_response(
-    response_region: Tuple[int, int, int, int],
+    response_region: Region,
     timeout: float = 20.0,
     poll_interval: float = 0.5,
 ) -> str:
@@ -85,8 +86,7 @@ def read_chatgpt_response(
     Parameters
     ----------
     response_region:
-        The screen rectangle (``x``, ``y``, ``width``, ``height``) containing
-        ChatGPT's textual response.
+        The screen rectangle containing ChatGPT's textual response.
     timeout:
         Maximum number of seconds to wait for a non-empty OCR result.
     poll_interval:
@@ -113,7 +113,7 @@ def read_chatgpt_response(
     validate_region(response_region)
     start = time.time()
     while time.time() - start < timeout:
-        img = pyautogui.screenshot(response_region)
+        img = pyautogui.screenshot(response_region.as_tuple())
         text = pytesseract.image_to_string(img).strip()
         if text:
             return text
@@ -122,7 +122,7 @@ def read_chatgpt_response(
     raise TimeoutError("No response detected")
 
 
-def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
+def click_option(base: Point, index: int, offset: int = 40) -> None:
     """Click the answer option at ``index`` using ``base`` as the first option.
 
     ``base`` corresponds to the coordinates of the first option on screen.  The
@@ -141,10 +141,10 @@ def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
 
 def answer_question_via_chatgpt(
     quiz_image: Any,
-    chatgpt_box: Tuple[int, int],
-    response_region: Tuple[int, int, int, int],
+    chatgpt_box: Point,
+    response_region: Region,
     options: Sequence[str],
-    option_base: Tuple[int, int],
+    option_base: Point,
     stats: Stats | None = None,
     poll_interval: float = 0.5,
 ) -> str:

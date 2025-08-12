@@ -6,11 +6,11 @@ import logging
 import threading
 import time
 from queue import Queue
-from typing import Tuple
 
 from .config import Settings
 from .ocr import OCRBackend, PytesseractOCR
 from .utils import hash_text
+from .types import Region
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class Watcher(threading.Thread):
 
     def __init__(
         self,
-        region: Tuple[int, int, int, int],
+        region: Region,
         queue: Queue,
         cfg: Settings,
         ocr: OCRBackend | None = None,
@@ -52,7 +52,7 @@ class Watcher(threading.Thread):
         except Exception as exc:
             logger.exception("Failed to obtain mss instance")
             raise RuntimeError("Screen capture requires the 'mss' package") from exc
-        return mss_module.mss().grab(self.region)
+        return mss_module.mss().grab(self.region.as_tuple())
 
     def ocr(self, img) -> str:  # pragma: no cover - behaviour provided by backend
         return self.ocr_backend(img)

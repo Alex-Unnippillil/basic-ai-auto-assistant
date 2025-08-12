@@ -10,8 +10,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 import json
+
+from .types import Region
 
 try:  # pragma: no cover - optional dependency
     import pyautogui  # type: ignore
@@ -32,7 +34,7 @@ class RegionSelector:
     """
 
     path: Path
-    _regions: Dict[str, Tuple[int, int, int, int]] = field(default_factory=dict)
+    _regions: Dict[str, Region] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.path.exists():
@@ -40,7 +42,7 @@ class RegionSelector:
                 with self.path.open("r", encoding="utf8") as fh:
                     data = json.load(fh)
                 if isinstance(data, dict):
-                    regions: Dict[str, Tuple[int, int, int, int]] = {}
+                    regions: Dict[str, Region] = {}
                     for k, v in data.items():
                         if (
                             isinstance(k, str)
@@ -48,7 +50,7 @@ class RegionSelector:
                             and len(v) == 4
                             and all(isinstance(i, int) for i in v)
                         ):
-                            regions[k] = tuple(v)  # type: ignore[arg-type]
+                            regions[k] = Region(*v)
                         else:
                             raise ValueError("invalid region data")
                     self._regions = regions
@@ -57,7 +59,7 @@ class RegionSelector:
             except (OSError, json.JSONDecodeError, ValueError):
                 self._regions = {}
 
-    def select(self, name: str) -> Tuple[int, int, int, int]:
+    def select(self, name: str) -> Region:
         """Interactively select a region and persist it under ``name``.
 
         The user is prompted (via :func:`input`) to move the mouse to the top
@@ -69,18 +71,18 @@ class RegionSelector:
         x1, y1 = pyautogui.position()
         input("Move mouse to bottom right and press Enter")
         x2, y2 = pyautogui.position()
-        region = (x1, y1, x2 - x1, y2 - y1)
+        region = Region(x1, y1, x2 - x1, y2 - y1)
 
         self._regions[name] = region
         try:
             with self.path.open("w", encoding="utf8") as fh:
-                json.dump(self._regions, fh)
+                json.dump({k: list(v) for k, v in self._regions.items()}, fh)
         except OSError:
             pass
 
         return region
 
-    def load(self, name: str) -> Tuple[int, int, int, int]:
+    def load(self, name: str) -> Region:
         """Return the region stored under ``name``.
 
         Raises

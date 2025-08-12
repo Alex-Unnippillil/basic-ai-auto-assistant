@@ -8,7 +8,7 @@ import io
 import logging
 import subprocess
 import sys
-from typing import Any, Tuple
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,9 @@ def hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def validate_region(region: Tuple[int, int, int, int]) -> None:
+def validate_region(region: Region) -> None:
     """Ensure *region* has positive width and height."""
+
     _left, _top, width, height = region
     if width <= 0 or height <= 0:
         raise ValueError("Region width and height must be positive")

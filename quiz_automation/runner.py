@@ -4,13 +4,14 @@ from __future__ import annotations
 import queue
 import threading
 import time
-from typing import Sequence, Tuple
+from typing import Sequence
 
 from . import automation
 from .automation import answer_question_via_chatgpt
 from .stats import Stats
 from .gui import QuizGUI
 from .logger import get_logger
+from .types import Point, Region
 
 logger = get_logger(__name__)
 
@@ -20,11 +21,11 @@ class QuizRunner(threading.Thread):
 
     def __init__(
         self,
-        quiz_region: Tuple[int, int, int, int],
-        chatgpt_box: Tuple[int, int],
-        response_region: Tuple[int, int, int, int],
+        quiz_region: Region,
+        chatgpt_box: Point,
+        response_region: Region,
         options: Sequence[str],
-        option_base: Tuple[int, int],
+        option_base: Point,
         *,
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
@@ -53,7 +54,7 @@ class QuizRunner(threading.Thread):
         def capture() -> None:
             while not self.stop_flag.is_set():
                 if q.empty():
-                    img = automation.pyautogui.screenshot(self.quiz_region)
+                    img = automation.pyautogui.screenshot(self.quiz_region.as_tuple())
                     q.put(img)
                 else:
                     time.sleep(0.05)

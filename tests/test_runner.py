@@ -1,5 +1,6 @@
 from quiz_automation.runner import QuizRunner
 from quiz_automation import automation
+from quiz_automation.types import Point, Region
 
 
 def test_runner_triggers_full_flow(monkeypatch):
@@ -29,7 +30,7 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     monkeypatch.setattr(automation, "click_option", fake_click)
 
-    runner = QuizRunner((0, 0, 10, 10), (0, 0), (0, 0, 10, 10), ["A", "B"], (0, 0))
+    runner = QuizRunner(Region(0, 0, 10, 10), Point(0, 0), Region(0, 0, 10, 10), ["A", "B"], Point(0, 0))
 
     orig = automation.answer_question_via_chatgpt
 

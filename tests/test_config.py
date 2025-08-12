@@ -1,4 +1,5 @@
 from quiz_automation.config import Settings
+from quiz_automation.types import Region
 
 
 def test_config_loads_env(monkeypatch):
@@ -23,11 +24,11 @@ def test_config_default_poll_interval():
 
 def test_screen_region_defaults():
     cfg = Settings()
-    assert cfg.quiz_region == (100, 100, 600, 400)
+    assert cfg.quiz_region == Region(100, 100, 600, 400)
 
 
 def test_screen_region_env(monkeypatch):
     monkeypatch.setenv("QUIZ_REGION", "[10,20,30,40]")
     cfg = Settings()
-    assert cfg.quiz_region == (10, 20, 30, 40)
+    assert cfg.quiz_region == Region(10, 20, 30, 40)
 

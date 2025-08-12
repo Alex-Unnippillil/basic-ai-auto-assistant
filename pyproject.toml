@@ -5,3 +5,25 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "basic-ai-auto-assistant"
 version = "0.1.0"
+description = "Automates multiple-choice quizzes via ChatGPT with optional desktop GUI and OCR tools."
+dependencies = [
+    "pydantic",
+    "pydantic-settings",
+    "mss",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+full = [
+    "pyautogui",
+    "pytesseract",
+    "PySide6",
+    "opencv-python",
+]
+
+[project.scripts]
+quiz-automation = "quiz_automation.run:main"

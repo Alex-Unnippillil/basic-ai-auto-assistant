@@ -157,8 +157,9 @@ def answer_question_via_chatgpt(
     start = time.time()
     send_to_chatgpt(quiz_image, chatgpt_box)
     response = read_chatgpt_response(response_region)
+    matches = re.findall(r"[A-D]", response.upper())
+    letter = matches[-1] if matches else ""
 
-    
     try:
         idx = options.index(letter)
     except ValueError:
@@ -167,6 +168,7 @@ def answer_question_via_chatgpt(
         idx = max(0, ord(letter) - ord("A"))
 
     click_option(option_base, idx)
+    logger.info("ChatGPT chose %s", letter)
 
     if stats is not None:
         duration = time.time() - start

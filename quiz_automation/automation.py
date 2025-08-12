@@ -66,7 +66,8 @@ def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
     if not hasattr(pyautogui, "moveTo"):
         raise RuntimeError("pyautogui not available")
 
-    copy_image_to_clipboard(img)
+    if not copy_image_to_clipboard(img):
+        raise RuntimeError("failed to copy image to clipboard")
     pyautogui.moveTo(*box)
     # ``hotkey`` is easier for tests to monkeypatch than writing characters
     pyautogui.hotkey("ctrl", "v")

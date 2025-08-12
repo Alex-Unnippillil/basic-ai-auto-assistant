@@ -23,7 +23,11 @@ def test_automation_logs_message(monkeypatch, caplog):
     caplog.set_level(logging.INFO, logger="quiz_automation.automation")
 
     monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
-    monkeypatch.setattr(automation, "read_chatgpt_response", lambda region, timeout=20.0: "Answer B")
+    monkeypatch.setattr(
+        automation,
+        "read_chatgpt_response",
+        lambda region, timeout=20.0, poll_interval=0.5: "Answer B",
+    )
     monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
 
     letter = automation.answer_question_via_chatgpt(

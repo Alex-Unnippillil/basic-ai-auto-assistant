@@ -1,5 +1,7 @@
 import io
 import subprocess
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -34,10 +36,31 @@ def test_copy_image_linux(monkeypatch):
         return DummyProc()
 
     monkeypatch.setattr(subprocess, "Popen", fake_popen)
-    copy_image_to_clipboard(DummyImage())
+    assert copy_image_to_clipboard(DummyImage()) is True
     assert called["cmd"][:3] == ["xclip", "-selection", "clipboard"]
+
+
+def test_copy_image_failure(monkeypatch, caplog):
+    class DummyImage:
+        def save(self, fp, fmt):  # pragma: no cover - simple helper
+            fp.write(b"data")
+
+    def fail_popen(*args, **kwargs):
+        raise OSError("boom")
+
+    monkeypatch.setattr(subprocess, "Popen", fail_popen)
+    monkeypatch.setitem(
+        sys.modules,
+        "pyperclip",
+        SimpleNamespace(copy=lambda *_: (_ for _ in ()).throw(RuntimeError("fail"))),
+    )
+
+    with caplog.at_level("ERROR"):
+        assert copy_image_to_clipboard(DummyImage()) is False
+        assert any("Failed to copy image" in r.message for r in caplog.records)
 
 
 def test_validate_region_errors():
     with pytest.raises(ValueError):
         validate_region((0, 0, 0, 10))
+

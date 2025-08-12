@@ -162,6 +162,7 @@ def answer_question_via_chatgpt(
     except ValueError:
         # Fall back to alphabetical ordering; ensures a valid index even if the
         # model returns an unexpected string such as "E".
+        letter = letter or "A"
         idx = max(0, ord(letter) - ord("A"))
 
     click_option(option_base, idx)

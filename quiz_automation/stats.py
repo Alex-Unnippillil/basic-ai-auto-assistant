@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import List
 
 
 @dataclass
@@ -17,8 +16,8 @@ class Stats:
     :attr:`questions_answered` or :attr:`average_time` to display live metrics.
     """
 
-    question_times: List[float] = field(default_factory=list)
-    token_counts: List[int] = field(default_factory=list)
+    total_time: float = 0.0
+    total_tokens: int = 0
     questions_answered: int = 0
     errors: int = 0
     _lock: Lock = field(default_factory=Lock, init=False, repr=False)
@@ -28,8 +27,8 @@ class Stats:
 
         with self._lock:
             self.questions_answered += 1
-            self.question_times.append(duration)
-            self.token_counts.append(tokens)
+            self.total_time += duration
+            self.total_tokens += tokens
 
     def record_error(self) -> None:
         """Increment the error counter."""
@@ -42,15 +41,15 @@ class Stats:
         """Return the average time taken per question."""
 
         with self._lock:
-            if not self.question_times:
+            if self.questions_answered == 0:
                 return 0.0
-            return sum(self.question_times) / len(self.question_times)
+            return self.total_time / self.questions_answered
 
     @property
     def average_tokens(self) -> float:
         """Return the average tokens used per question."""
 
         with self._lock:
-            if not self.token_counts:
+            if self.questions_answered == 0:
                 return 0.0
-            return sum(self.token_counts) / len(self.token_counts)
+            return self.total_tokens / self.questions_answered

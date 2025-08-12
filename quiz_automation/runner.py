@@ -10,6 +10,10 @@ from . import automation
 from .automation import answer_question_via_chatgpt
 from .stats import Stats
 from .gui import QuizGUI
+from .logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class QuizRunner(threading.Thread):
@@ -39,6 +43,7 @@ class QuizRunner(threading.Thread):
     # The behaviour of this method is tested indirectly via unit tests that
     # patch :func:`answer_question_via_chatgpt`, so it is excluded from coverage
     def run(self) -> None:  # pragma: no cover
+        logger.info("QuizRunner started")
         q: queue.Queue = queue.Queue(maxsize=1)
 
         def capture() -> None:
@@ -65,6 +70,7 @@ class QuizRunner(threading.Thread):
                         stats=self.stats,
                     )
                 except Exception:
+                    logger.exception("Error while answering question")
                     self.stats.record_error()
                 finally:
                     if self.gui is not None:
@@ -76,3 +82,4 @@ class QuizRunner(threading.Thread):
         t_worker.start()
         t_capture.join()
         t_worker.join()
+        logger.info("QuizRunner finished")

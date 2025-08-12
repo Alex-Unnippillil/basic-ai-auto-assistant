@@ -8,6 +8,7 @@ from queue import Queue
 from typing import Tuple
 
 from .config import Settings
+from .logger import get_logger
 from .utils import hash_text
 
 try:  # pragma: no cover - optional dependency
@@ -33,6 +34,7 @@ class Watcher(threading.Thread):
         self.stop_flag = threading.Event()
         self.pause_flag = threading.Event()
         self._last_hash: str | None = None
+        self.logger = get_logger(__name__)
 
     # -- basic helpers -------------------------------------------------
     def capture(self):  # pragma: no cover - trivial wrapper
@@ -50,16 +52,20 @@ class Watcher(threading.Thread):
 
     # -- thread control ------------------------------------------------
     def stop(self) -> None:
+        self.logger.info("Stopping watcher")
         self.stop_flag.set()
 
     def pause(self) -> None:
+        self.logger.info("Pausing watcher")
         self.pause_flag.set()
 
     def resume(self) -> None:
+        self.logger.info("Resuming watcher")
         self.pause_flag.clear()
 
     # -- main loop -----------------------------------------------------
     def run(self) -> None:  # pragma: no cover - behaviour exercised in tests
+        self.logger.info("Watcher thread started")
         while not self.stop_flag.is_set():
             if self.pause_flag.is_set():
                 time.sleep(self.cfg.poll_interval)
@@ -67,5 +73,7 @@ class Watcher(threading.Thread):
             img = self.capture()
             text = self.ocr(img)
             if self.is_new_question(text):
+                self.logger.info("New question detected")
                 self.queue.put(("question", img, text))
             time.sleep(self.cfg.poll_interval)
+        self.logger.info("Watcher thread exiting")

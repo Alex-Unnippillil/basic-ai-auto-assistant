@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import io
+import logging
 import subprocess
 import sys
-import logging
 from typing import Any, Tuple
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,55 @@ def validate_region(region: Tuple[int, int, int, int]) -> None:
         raise ValueError("Region width and height must be positive")
 
 
+@contextlib.contextmanager
+def _open_win_clipboard(win32clipboard):
+    """Context manager that opens and closes the Windows clipboard."""
+    win32clipboard.OpenClipboard()
+    try:
+        yield win32clipboard
+    finally:  # pragma: no cover - housekeeping
+        win32clipboard.CloseClipboard()
+
+
+def _copy_windows(img: Any) -> bool:
+    import win32clipboard  # type: ignore  # pragma: no cover - Windows only
+
+    output = io.BytesIO()
+    img.convert("RGB").save(output, "BMP")
+    data = output.getvalue()[14:]
+    with _open_win_clipboard(win32clipboard) as clip:
+        clip.EmptyClipboard()
+        clip.SetClipboardData(clip.CF_DIB, data)
+    return True
+
+
+def _copy_macos(img: Any) -> bool:
+    with subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, close_fds=True) as proc:  # type: ignore[call-arg]
+        with proc.stdin:  # type: ignore[attr-defined]
+            img.save(proc.stdin, "PNG")
+    return True
+
+
+def _copy_linux(img: Any) -> bool:
+    with subprocess.Popen(
+        ["xclip", "-selection", "clipboard", "-t", "image/png"],
+        stdin=subprocess.PIPE,
+        close_fds=True,
+    ) as proc:  # type: ignore[call-arg]
+        with proc.stdin:  # type: ignore[attr-defined]
+            img.save(proc.stdin, "PNG")
+    return True
+
+
+def _copy_fallback(img: Any) -> bool:
+    import pyperclip  # type: ignore  # pragma: no cover - third-party utility
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    pyperclip.copy(base64.b64encode(buf.getvalue()).decode("ascii"))
+    return True
+
+
 def copy_image_to_clipboard(img: Any) -> bool:
     """Copy *img* to the system clipboard using OS-native utilities.
 
@@ -35,57 +85,25 @@ def copy_image_to_clipboard(img: Any) -> bool:
 
     last_exc: Exception | None = None
 
-    # Windows: use win32clipboard to place a DIB on the clipboard
     if sys.platform.startswith("win"):
-        try:  # pragma: no cover - exercised on Windows
-            import win32clipboard  # type: ignore
-
-            output = io.BytesIO()
-            img.convert("RGB").save(output, "BMP")
-            data = output.getvalue()[14:]
-            win32clipboard.OpenClipboard()
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-            win32clipboard.CloseClipboard()
-            return True
-        except Exception as exc:  # pragma: no cover - fallback below
+        try:
+            return _copy_windows(img)
+        except Exception as exc:  # pragma: no cover - exercised on Windows
             last_exc = exc
 
-    # macOS: pipe PNG data to ``pbcopy``
     if sys.platform == "darwin":
-        try:  # pragma: no cover - macOS specific
-            proc = subprocess.Popen(
-                ["pbcopy"], stdin=subprocess.PIPE, close_fds=True
-            )
-            img.save(proc.stdin, "PNG")
-            proc.stdin.close()
-            proc.wait()
-            return True
-        except Exception as exc:  # pragma: no cover
+        try:
+            return _copy_macos(img)
+        except Exception as exc:  # pragma: no cover - macOS specific
             last_exc = exc
 
-    # Linux: rely on xclip if present
     try:
-        proc = subprocess.Popen(
-            ["xclip", "-selection", "clipboard", "-t", "image/png"],
-            stdin=subprocess.PIPE,
-            close_fds=True,
-        )
-        img.save(proc.stdin, "PNG")
-        proc.stdin.close()
-        proc.wait()
-        return True
-    except Exception as exc:  # pragma: no cover - fall back below
+        return _copy_linux(img)
+    except Exception as exc:
         last_exc = exc
 
-    # Fallback: encode PNG as base64 and copy via pyperclip
-    try:  # pragma: no cover - lightweight fallback
-        import pyperclip  # type: ignore
-
-        buf = io.BytesIO()
-        img.save(buf, format="PNG")
-        pyperclip.copy(base64.b64encode(buf.getvalue()).decode("ascii"))
-        return True
+    try:
+        return _copy_fallback(img)
     except Exception as exc:  # pragma: no cover - nothing else we can do
         last_exc = exc
 

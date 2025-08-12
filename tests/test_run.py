@@ -12,4 +12,5 @@ def test_headless_invokes_quiz_runner(monkeypatch):
 
     mock_runner.assert_called_once()
     instance.start.assert_called_once_with()
+    instance.join.assert_called_once_with()
 

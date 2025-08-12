@@ -29,7 +29,7 @@ class QuizRunner(threading.Thread):
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
     ) -> None:
-        super().__init__(daemon=True)
+        super().__init__()
         self.quiz_region = quiz_region
         self.chatgpt_box = chatgpt_box
         self.response_region = response_region

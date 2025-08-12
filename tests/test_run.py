@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import run
+from quiz_automation.types import Point, Region
 
 
 def test_headless_invokes_quiz_runner(monkeypatch):
@@ -9,10 +10,10 @@ def test_headless_invokes_quiz_runner(monkeypatch):
     monkeypatch.setattr(run, "QuizRunner", mock_runner)
 
     cfg = MagicMock(
-        quiz_region=(1, 2, 3, 4),
-        chat_box=(5, 6),
-        response_region=(7, 8, 9, 10),
-        option_base=(11, 12),
+        quiz_region=Region(1, 2, 3, 4),
+        chat_box=Point(5, 6),
+        response_region=Region(7, 8, 9, 10),
+        option_base=Point(11, 12),
     )
     monkeypatch.setattr(run, "Settings", lambda: cfg)
 

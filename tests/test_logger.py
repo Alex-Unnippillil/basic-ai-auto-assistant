@@ -2,6 +2,7 @@ import logging
 
 from quiz_automation.logger import configure_logger, get_logger
 from quiz_automation import automation
+from quiz_automation.types import Point, Region
 
 
 def test_configure_logger_and_format(capsys):
@@ -27,7 +28,7 @@ def test_automation_logs_message(monkeypatch, caplog):
     monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
 
     letter = automation.answer_question_via_chatgpt(
-        "img", (0, 0), (0, 0, 10, 10), ["A", "B"], (0, 0)
+        "img", Point(0, 0), Region(0, 0, 10, 10), ["A", "B"], Point(0, 0)
     )
     assert letter == "B"
     assert "ChatGPT chose B" in caplog.text

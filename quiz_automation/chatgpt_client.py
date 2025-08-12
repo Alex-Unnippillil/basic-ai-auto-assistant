@@ -1,9 +1,10 @@
 """Minimal OpenAI client wrapper with retry logic."""
 from __future__ import annotations
 
-import json
 import time
-from typing import Optional
+from typing import Literal, Optional
+
+from pydantic import BaseModel, ValidationError
 
 try:  # pragma: no cover - optional dependency
     from openai import (
@@ -17,6 +18,12 @@ except Exception:  # pragma: no cover
     APITimeoutError = APIConnectionError = RateLimitError = ()  # type: ignore
 
 from .config import settings
+
+
+class QuizAnswer(BaseModel):
+    """Expected schema for quiz answers."""
+
+    answer: Literal["A", "B", "C", "D"]
 
 if isinstance(APITimeoutError, type):
     TRANSIENT_ERRORS = (APITimeoutError, APIConnectionError, RateLimitError, TimeoutError, ConnectionError)
@@ -64,15 +71,14 @@ class ChatGPTClient:
         for attempt in range(1, retries + 1):
             try:
                 raw = self._completion(prompt)
-                data = json.loads(raw)
-                answer = data.get("answer")
-                if answer not in {"A", "B", "C", "D"}:
-                    raise ValueError("answer must be one of A, B, C, D")
-                return answer
+                data = QuizAnswer.model_validate_json(raw)
+                return data.answer
             except TRANSIENT_ERRORS as exc:
                 if attempt == retries:
                     raise RuntimeError(f"OpenAI transient error: {exc}") from exc
                 time.sleep(2 ** (attempt - 1))
+            except ValidationError as exc:
+                raise RuntimeError(f"Invalid model response: {exc}") from exc
             except Exception as exc:
                 raise RuntimeError(f"Invalid model response: {exc}") from exc
         raise RuntimeError("Failed to get model response")

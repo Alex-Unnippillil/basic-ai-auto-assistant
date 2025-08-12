@@ -57,3 +57,22 @@ def test_chatgpt_client_retries_on_transient_error(monkeypatch):
     monkeypatch.setattr("quiz_automation.chatgpt_client.time.sleep", lambda s: None)
     assert client.ask("Q?") == "A"
     assert calls["n"] == 2
+
+
+def test_chatgpt_client_invalid_schema(monkeypatch):
+    client = _setup_client(monkeypatch)
+    monkeypatch.setattr(client, "_completion", lambda prompt: '{"answer":"Z"}')
+    with pytest.raises(RuntimeError):
+        client.ask("Q?")
+
+
+def test_chatgpt_client_raises_after_transient_errors(monkeypatch):
+    client = _setup_client(monkeypatch)
+
+    def fail(prompt: str) -> str:
+        raise TimeoutError("temporary")
+
+    monkeypatch.setattr(client, "_completion", fail)
+    monkeypatch.setattr("quiz_automation.chatgpt_client.time.sleep", lambda s: None)
+    with pytest.raises(RuntimeError):
+        client.ask("Q?", retries=2)

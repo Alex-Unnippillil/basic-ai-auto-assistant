@@ -7,20 +7,15 @@ def test_config_loads_env(monkeypatch):
     assert cfg.poll_interval == 2.5
 
 
+def test_openai_config_overrides(monkeypatch):
+    monkeypatch.setenv("OPENAI_MODEL", "foo")
+    monkeypatch.setenv("OPENAI_SYSTEM_PROMPT", "prompt")
+    cfg = Settings()
+    assert cfg.openai_model == "foo"
+    assert cfg.openai_system_prompt == "prompt"
+
+
 def test_config_default_poll_interval():
     cfg = Settings()
     assert cfg.poll_interval == 1.0
 
-
-def test_config_model_name_and_temperature_env(monkeypatch):
-    monkeypatch.setenv("MODEL_NAME", "gpt-test")
-    monkeypatch.setenv("TEMPERATURE", "0.7")
-    cfg = Settings()
-    assert cfg.model_name == "gpt-test"
-    assert cfg.temperature == 0.7
-
-
-def test_config_default_model_and_temperature():
-    cfg = Settings()
-    assert cfg.model_name == "o4-mini-high"
-    assert cfg.temperature == 0.0

@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     """Read configuration from environment variables."""
 
     openai_api_key: str | None = None
+    openai_model: str = "o4-mini-high"
+    openai_system_prompt: str = "Reply with JSON {'answer':'A|B|C|D'}"
     poll_interval: float = 1.0
     model_name: str = "o4-mini-high"
     temperature: float = 0.0

@@ -35,7 +35,7 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     def wrapped(*args, **kwargs):
         result = orig(*args, **kwargs)
-        runner.stop_flag.set()
+        runner.stop()
         return result
 
     monkeypatch.setattr(automation, "answer_question_via_chatgpt", wrapped)

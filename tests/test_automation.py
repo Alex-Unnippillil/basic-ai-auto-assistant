@@ -90,3 +90,26 @@ def test_click_option_missing_pyautogui(monkeypatch):
     with pytest.raises(RuntimeError):
         automation.click_option((0, 0), 0)
 
+
+def test_answer_question_fallback_to_first_option(monkeypatch):
+    """If ChatGPT's response lacks A-D the first option is used."""
+
+    calls: list[int] = []
+
+    monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
+    monkeypatch.setattr(
+        automation, "read_chatgpt_response", lambda region, timeout=20.0: "No option"
+    )
+
+    def fake_click_option(base, idx, offset=40):
+        calls.append(idx)
+
+    monkeypatch.setattr(automation, "click_option", fake_click_option)
+
+    letter = automation.answer_question_via_chatgpt(
+        "img", (0, 0), (0, 0, 1, 1), ["A", "B", "C"], (0, 0)
+    )
+
+    assert letter == "A"
+    assert calls == [0]
+

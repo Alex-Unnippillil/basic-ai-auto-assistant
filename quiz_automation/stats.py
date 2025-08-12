@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from threading import Lock
 from typing import List
+import threading
 
 
 @dataclass
@@ -22,6 +23,9 @@ class Stats:
     questions_answered: int = 0
     errors: int = 0
     _lock: Lock = field(default_factory=Lock, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._lock = threading.Lock()
 
     def record(self, duration: float, tokens: int) -> None:
         """Record timing and token usage for a successful question."""

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Monitor the screen for new quiz questions and emit events."""
 
+import logging
 import threading
 import time
 from queue import Queue
@@ -10,6 +11,8 @@ from typing import Tuple
 from .config import Settings
 from .ocr import OCRBackend, PytesseractOCR
 from .utils import hash_text
+
+logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
     from mss import mss
@@ -43,8 +46,13 @@ class Watcher(threading.Thread):
         self.ocr_backend = ocr or PytesseractOCR()
 
     # -- basic helpers -------------------------------------------------
-    def capture(self):  # pragma: no cover - trivial wrapper
-        return _mss().mss().grab(self.region)
+    def capture(self):
+        try:
+            mss_module = _mss()
+        except Exception as exc:
+            logger.exception("Failed to obtain mss instance")
+            raise RuntimeError("Screen capture requires the 'mss' package") from exc
+        return mss_module.mss().grab(self.region)
 
     def ocr(self, img) -> str:  # pragma: no cover - behaviour provided by backend
         return self.ocr_backend(img)

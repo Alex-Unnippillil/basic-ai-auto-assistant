@@ -1,5 +1,8 @@
+import logging
 import time
 from queue import Queue
+
+import pytest
 
 from quiz_automation import watcher as watcher_module
 from quiz_automation.config import Settings
@@ -68,3 +71,14 @@ def test_watcher_pause_resume(monkeypatch):
     w.resume()
     w.join()
     assert not q.empty()
+
+
+def test_capture_missing_mss_logs_and_raises(monkeypatch, caplog):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    monkeypatch.setattr(watcher_module, "mss", None, raising=False)
+    cfg = Settings()
+    w = Watcher((0, 0, 1, 1), Queue(), cfg)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(RuntimeError, match="mss"):
+            w.capture()
+    assert "Failed to obtain mss instance" in caplog.text

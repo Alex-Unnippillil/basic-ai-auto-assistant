@@ -23,6 +23,25 @@ def test_click_at_moves_and_clicks(monkeypatch):
     assert calls == [("move", 10, 20), ("click",)]
 
 
+def test_click_option_uses_base_and_offset(monkeypatch):
+    """``Clicker.click_option`` should apply ``base`` and ``offset``."""
+
+    calls: list[tuple] = []
+
+    def move_to(x, y):
+        calls.append(("move", x, y))
+
+    def do_click():
+        calls.append(("click",))
+
+    fake = types.SimpleNamespace(moveTo=move_to, click=do_click)
+    monkeypatch.setattr(clicker, "pyautogui", fake)
+
+    clicker.Clicker((10, 10), offset=5).click_option(2)
+
+    assert calls == [("move", 10, 20), ("click",)]
+
+
 def test_move_raises_when_pyautogui_missing(monkeypatch):
     """``Clicker.move`` should raise when ``pyautogui`` lacks ``moveTo``."""
 

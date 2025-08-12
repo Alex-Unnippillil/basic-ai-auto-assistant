@@ -61,29 +61,32 @@ def test_read_chatgpt_response_timeout(monkeypatch):
         automation.read_chatgpt_response((0, 0, 1, 1), timeout=1.0)
 
 
-def test_click_option_moves_and_clicks(monkeypatch):
-    """``click_option`` computes the y-offset correctly and clicks."""
+def test_click_option_uses_clicker(monkeypatch):
+    """``click_option`` delegates to :class:`Clicker`."""
 
-    calls = []
+    calls: list[tuple] = []
 
-    def move(x, y):
-        calls.append(("move", x, y))
+    class FakeClicker:
+        def __init__(self, base, offset):
+            calls.append(("init", base, offset))
 
-    def do_click():
-        calls.append(("click",))
+        def click_option(self, index):
+            calls.append(("click_option", index))
 
-    fake = types.SimpleNamespace(moveTo=move, click=do_click)
-    monkeypatch.setattr(automation, "pyautogui", fake)
+    monkeypatch.setattr(automation, "Clicker", FakeClicker)
 
     automation.click_option((10, 10), 2, offset=5)
 
-    assert calls == [("move", 10, 20), ("click",)]
+    assert calls == [("init", (10, 10), 5), ("click_option", 2)]
 
 
 def test_click_option_missing_pyautogui(monkeypatch):
     """If ``pyautogui`` lacks ``moveTo`` a ``RuntimeError`` is raised."""
 
-    monkeypatch.setattr(automation, "pyautogui", object())
+    from quiz_automation import clicker
+
+    monkeypatch.setattr(clicker, "pyautogui", object())
+
     with pytest.raises(RuntimeError):
         automation.click_option((0, 0), 0)
 

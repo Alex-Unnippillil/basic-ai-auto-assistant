@@ -29,6 +29,20 @@ __all__ = ["Clicker", "move_to", "click", "click_at"]
 class Clicker:
     """Encapsulate mouse movement and clicking via :mod:`pyautogui`."""
 
+    def __init__(self, base: tuple[int, int] = (0, 0), offset: int = 40) -> None:
+        """Initialize the clicker with ``base`` coordinates and ``offset``.
+
+        Parameters
+        ----------
+        base:
+            Screen coordinates of the first option.  Defaults to ``(0, 0)``.
+        offset:
+            Vertical distance in pixels between successive options.
+        """
+
+        self.base = base
+        self.offset = offset
+
     def move(self, x: int, y: int) -> None:
         """Move the mouse cursor to ``(x, y)``."""
 
@@ -48,6 +62,12 @@ class Clicker:
 
         self.move(x, y)
         self.click()
+
+    def click_option(self, index: int) -> None:
+        """Click the option at ``index`` relative to ``base`` and ``offset``."""
+
+        x, y = self.base
+        self.click_at(x, y + index * self.offset)
 
 
 _default_clicker = Clicker()

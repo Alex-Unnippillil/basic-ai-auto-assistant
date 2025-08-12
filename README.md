@@ -26,7 +26,7 @@ The requirements file installs everything needed to run the full automation.  Fo
 The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
 
 ### Environment variables
-Set `OPENAI_API_KEY` for access to the OpenAI API.  Additional settings read by the tool include `OPENAI_MODEL`, `OPENAI_SYSTEM_PROMPT`, `POLL_INTERVAL`, `MODEL_NAME`, and `TEMPERATURE`.
+Set `OPENAI_API_KEY` for access to the OpenAI API.  Additional settings read by the tool include `OPENAI_MODEL`, `OPENAI_SYSTEM_PROMPT`, `POLL_INTERVAL`, and `TEMPERATURE`.
 
 Screen regions can be customized with `QUIZ_REGION`, `CHAT_BOX`, `RESPONSE_REGION`, and `OPTION_BASE`. Each is a JSON array of integers such as `QUIZ_REGION=[100,100,600,400]`.
 
@@ -37,7 +37,6 @@ OPENAI_API_KEY=sk-your-api-key
 OPENAI_MODEL=o4-mini-high
 # OPENAI_SYSTEM_PROMPT="Reply with JSON {'answer':'A|B|C|D'}"
 # POLL_INTERVAL=1.0
-# MODEL_NAME=o4-mini-high
 # TEMPERATURE=0.0
 # QUIZ_REGION=[100,100,600,400]
 # CHAT_BOX=[800,900]

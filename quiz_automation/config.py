@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     openai_model: str = "o4-mini-high"
     openai_system_prompt: str = "Reply with JSON {'answer':'A|B|C|D'}"
     poll_interval: float = 1.0
-    model_name: str = "o4-mini-high"
     temperature: float = 0.0
 
     quiz_region: tuple[int, int, int, int] = (100, 100, 600, 400)
@@ -21,6 +20,15 @@ class Settings(BaseSettings):
     option_base: tuple[int, int] = (100, 520)
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
+
+    @property
+    def model(self) -> str:
+        """Alias for ``openai_model`` for backward compatibility."""
+        return self.openai_model
+
+    @model.setter
+    def model(self, value: str) -> None:  # pragma: no cover - simple assignment
+        self.openai_model = value
 
 
 # A module-level settings instance convenient for components that do not need

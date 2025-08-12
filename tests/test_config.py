@@ -11,6 +11,7 @@ def test_openai_config_overrides(monkeypatch):
     monkeypatch.setenv("OPENAI_MODEL", "foo")
     monkeypatch.setenv("OPENAI_SYSTEM_PROMPT", "prompt")
     cfg = Settings()
+    assert cfg.model == "foo"
     assert cfg.openai_model == "foo"
     assert cfg.openai_system_prompt == "prompt"
 

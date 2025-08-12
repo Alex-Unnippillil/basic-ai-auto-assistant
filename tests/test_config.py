@@ -19,3 +19,14 @@ def test_config_default_poll_interval():
     cfg = Settings()
     assert cfg.poll_interval == 1.0
 
+
+def test_screen_region_defaults():
+    cfg = Settings()
+    assert cfg.quiz_region == (100, 100, 600, 400)
+
+
+def test_screen_region_env(monkeypatch):
+    monkeypatch.setenv("QUIZ_REGION", "[10,20,30,40]")
+    cfg = Settings()
+    assert cfg.quiz_region == (10, 20, 30, 40)
+

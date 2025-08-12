@@ -28,6 +28,8 @@ The package installs a `quiz-automation` script that wraps the command‑line in
 ### Environment variables
 Set `OPENAI_API_KEY` for access to the OpenAI API.  Additional settings read by the tool include `OPENAI_MODEL`, `OPENAI_SYSTEM_PROMPT`, `POLL_INTERVAL`, `MODEL_NAME`, and `TEMPERATURE`.
 
+Screen regions can be customized with `QUIZ_REGION`, `CHAT_BOX`, `RESPONSE_REGION`, and `OPTION_BASE`. Each is a JSON array of integers such as `QUIZ_REGION=[100,100,600,400]`.
+
 An example `.env` file:
 
 ```dotenv
@@ -37,6 +39,10 @@ OPENAI_MODEL=o4-mini-high
 # POLL_INTERVAL=1.0
 # MODEL_NAME=o4-mini-high
 # TEMPERATURE=0.0
+# QUIZ_REGION=[100,100,600,400]
+# CHAT_BOX=[800,900]
+# RESPONSE_REGION=[100,550,600,150]
+# OPTION_BASE=[100,520]
 ```
 
 ### Optional dependencies
@@ -61,16 +67,21 @@ quiz-automation --mode gui
 ## CLI example
 ```python
 from quiz_automation import answer_question_via_chatgpt, Stats
+from quiz_automation.config import Settings
 import pyautogui
 
-quiz_region = (100, 100, 600, 400)
-chatgpt_box = (800, 900)
-response_region = (100, 550, 600, 150)
-option_base = (100, 520)
+cfg = Settings()
 options = list("ABCD")
 
-img = pyautogui.screenshot(quiz_region)
-letter = answer_question_via_chatgpt(img, chatgpt_box, response_region, options, option_base, stats=Stats())
+img = pyautogui.screenshot(cfg.quiz_region)
+letter = answer_question_via_chatgpt(
+    img,
+    cfg.chat_box,
+    cfg.response_region,
+    options,
+    cfg.option_base,
+    stats=Stats(),
+)
 print(f"Model chose {letter}")
 ```
 This snippet grabs the current question, asks ChatGPT for help, and clicks the selected answer.  Adjust the coordinates to match your screen layout.
@@ -78,15 +89,20 @@ This snippet grabs the current question, asks ChatGPT for help, and clicks the s
 ## GUI example
 ```python
 from quiz_automation import QuizGUI, QuizRunner
+from quiz_automation.config import Settings
 
-quiz_region = (100, 100, 600, 400)
-chatgpt_box = (800, 900)
-response_region = (100, 550, 600, 150)
-option_base = (100, 520)
+cfg = Settings()
 options = list("ABCD")
 
 ui = QuizGUI()
-runner = QuizRunner(quiz_region, chatgpt_box, response_region, options, option_base, gui=ui)
+runner = QuizRunner(
+    cfg.quiz_region,
+    cfg.chat_box,
+    cfg.response_region,
+    options,
+    cfg.option_base,
+    gui=ui,
+)
 runner.start()             # capture + worker threads
 ```
 The window updates with question count, average response time, tokens, and errors as the runner progresses.

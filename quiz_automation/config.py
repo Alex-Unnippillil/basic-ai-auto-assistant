@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     model_name: str = "o4-mini-high"
     temperature: float = 0.0
 
+    quiz_region: tuple[int, int, int, int] = (100, 100, 600, 400)
+    chat_box: tuple[int, int] = (800, 900)
+    response_region: tuple[int, int, int, int] = (100, 550, 600, 150)
+    option_base: tuple[int, int] = (100, 520)
+
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
 
 

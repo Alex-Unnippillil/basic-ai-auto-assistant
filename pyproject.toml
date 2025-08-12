@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "basic-ai-auto-assistant"
+version = "0.1.0"
+description = "Basic AI auto assistant for quiz automation"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic==2.11.7",
+    "pydantic-settings==2.10.1",
+    "python-dotenv==1.1.1",
+    "pyperclip==1.9.0",
+]
+
+[project.optional-dependencies]
+gui = [
+    "PySide6==6.6.2",
+]
+cv = [
+    "mss==9.0.1",
+    "pytesseract==0.3.10",
+    "opencv-python==4.9.0.80",
+    "numpy==2.3.2",
+    "pyautogui==0.9.54",
+]
+dev = [
+    "pytest==8.2.1",
+    "ruff==0.1.8",
+]

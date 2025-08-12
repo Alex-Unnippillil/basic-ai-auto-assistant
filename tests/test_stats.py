@@ -4,6 +4,7 @@ from quiz_automation.stats import Stats
 import pytest
 
 
+
 def test_record_updates_counts_and_averages() -> None:
     stats = Stats()
     stats.record(1.0, 4)
@@ -21,4 +22,5 @@ def test_record_error_increments_error_counter() -> None:
     stats.record_error()
     stats.record_error()
     assert stats.errors == 2
+
 

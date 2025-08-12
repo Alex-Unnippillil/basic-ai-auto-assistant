@@ -24,10 +24,14 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     monkeypatch.setattr(automation, "read_chatgpt_response", fake_read)
 
-    def fake_click(base, idx, offset=40):
-        calls["click"] += 1
+    class FakeClicker:
+        def __init__(self, base, offset=40):
+            pass
 
-    monkeypatch.setattr(automation, "click_option", fake_click)
+        def click(self, index):
+            calls["click"] += 1
+
+    monkeypatch.setattr(automation, "Clicker", FakeClicker)
 
     runner = QuizRunner((0, 0, 10, 10), (0, 0), (0, 0, 10, 10), ["A", "B"], (0, 0))
 

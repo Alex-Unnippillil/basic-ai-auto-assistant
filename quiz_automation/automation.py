@@ -14,6 +14,8 @@ from typing import Any, Sequence, Tuple
 import time
 import re
 
+from .clicker import Clicker
+
 try:  # pragma: no cover - optional heavy dependency
     import pyautogui  # type: ignore
     import pytesseract  # type: ignore
@@ -43,7 +45,6 @@ logger = get_logger(__name__)
 __all__ = [
     "send_to_chatgpt",
     "read_chatgpt_response",
-    "click_option",
     "answer_question_via_chatgpt",
 ]
 
@@ -118,27 +119,6 @@ def read_chatgpt_response(
     raise TimeoutError("No response detected")
 
 
-def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
-    """Click the answer option at ``index`` using ``base`` as the first option.
-
-    ``base`` corresponds to the coordinates of the first option on screen.  The
-    function increments the ``y`` coordinate by ``offset`` for each subsequent
-    option and performs a mouse click at the calculated position.
-
-    Raises
-    ------
-    RuntimeError
-        If :mod:`pyautogui` is not available.
-    """
-
-    if not hasattr(pyautogui, "moveTo"):
-        raise RuntimeError("pyautogui not available")
-
-    x, y = base
-    pyautogui.moveTo(x, y + index * offset)
-    pyautogui.click()
-
-
 def answer_question_via_chatgpt(
     quiz_image: Any,
     chatgpt_box: Tuple[int, int],
@@ -158,7 +138,10 @@ def answer_question_via_chatgpt(
     send_to_chatgpt(quiz_image, chatgpt_box)
     response = read_chatgpt_response(response_region)
 
-    
+    match = re.search(r"(?i)answer\s+([A-D])", response)
+    letter = match.group(1) if match else response[:1]
+    letter = letter.strip().upper()
+
     try:
         idx = options.index(letter)
     except ValueError:
@@ -166,7 +149,8 @@ def answer_question_via_chatgpt(
         # model returns an unexpected string such as "E".
         idx = max(0, ord(letter) - ord("A"))
 
-    click_option(option_base, idx)
+    Clicker(option_base).click(idx)
+    logger.info("ChatGPT chose %s", letter)
 
     if stats is not None:
         duration = time.time() - start

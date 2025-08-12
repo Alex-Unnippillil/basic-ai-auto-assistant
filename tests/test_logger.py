@@ -23,8 +23,18 @@ def test_automation_logs_message(monkeypatch, caplog):
     caplog.set_level(logging.INFO, logger="quiz_automation.automation")
 
     monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
-    monkeypatch.setattr(automation, "read_chatgpt_response", lambda region, timeout=20.0: "Answer B")
-    monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
+    monkeypatch.setattr(
+        automation, "read_chatgpt_response", lambda region, timeout=20.0: "Answer B"
+    )
+
+    class DummyClicker:
+        def __init__(self, base, offset=40):
+            pass
+
+        def click(self, index):
+            pass
+
+    monkeypatch.setattr(automation, "Clicker", DummyClicker)
 
     letter = automation.answer_question_via_chatgpt(
         "img", (0, 0), (0, 0, 10, 10), ["A", "B"], (0, 0)

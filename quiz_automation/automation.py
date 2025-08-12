@@ -35,6 +35,7 @@ except Exception:  # pragma: no cover
 
 from .utils import copy_image_to_clipboard, validate_region
 from .stats import Stats
+from .clicker import move_and_click
 
 __all__ = [
     "send_to_chatgpt",
@@ -113,25 +114,31 @@ def read_chatgpt_response(
     raise TimeoutError("No response detected")
 
 
-def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
+def click_option(
+    base: Tuple[int, int], index: int, offset: int = 40, *, retries: int = 3, dry_run: bool = False
+) -> None:
     """Click the answer option at ``index`` using ``base`` as the first option.
 
     ``base`` corresponds to the coordinates of the first option on screen.  The
     function increments the ``y`` coordinate by ``offset`` for each subsequent
     option and performs a mouse click at the calculated position.
 
-    Raises
-    ------
-    RuntimeError
-        If :mod:`pyautogui` is not available.
+    Parameters
+    ----------
+    base:
+        ``(x, y)`` coordinates of the first option.
+    index:
+        Zero-based index of the option to click.
+    offset:
+        Pixel distance between consecutive options.
+    retries:
+        Passed through to :func:`move_and_click`.
+    dry_run:
+        When ``True`` the click is skipped if :mod:`pyautogui` is unavailable.
     """
 
-    if not hasattr(pyautogui, "moveTo"):
-        raise RuntimeError("pyautogui not available")
-
     x, y = base
-    pyautogui.moveTo(x, y + index * offset)
-    pyautogui.click()
+    move_and_click(x, y + index * offset, retries=retries, dry_run=dry_run)
 
 
 def answer_question_via_chatgpt(

@@ -13,6 +13,11 @@ from pathlib import Path
 from typing import Dict, Tuple
 import json
 
+from .logger import get_logger
+
+
+log = get_logger(__name__)
+
 try:  # pragma: no cover - optional dependency
     import pyautogui  # type: ignore
 except Exception:  # pragma: no cover
@@ -36,9 +41,16 @@ class RegionSelector:
 
     def __post_init__(self) -> None:
         if self.path.exists():
-            with self.path.open("r", encoding="utf8") as fh:
-                data = json.load(fh)
-                self._regions = {k: tuple(v) for k, v in data.items()}
+            try:
+                with self.path.open("r", encoding="utf8") as fh:
+                    data = json.load(fh)
+                    self._regions = {k: tuple(v) for k, v in data.items()}
+            except json.JSONDecodeError:
+                self._regions = {}
+                log.warning(
+                    "Malformed region file %s encountered; starting with empty regions",
+                    self.path,
+                )
 
     def select(self, name: str) -> Tuple[int, int, int, int]:
         """Interactively select a region and persist it under ``name``.
@@ -70,4 +82,9 @@ class RegionSelector:
         """
 
         return self._regions[name]
+
+    def list_regions(self) -> Dict[str, Tuple[int, int, int, int]]:
+        """Return a copy of all stored regions."""
+
+        return dict(self._regions)
 

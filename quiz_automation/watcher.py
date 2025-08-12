@@ -8,6 +8,7 @@ from queue import Queue
 from typing import Tuple
 
 from .config import Settings
+from .ocr import OCRBackend, PytesseractOCR
 from .utils import hash_text
 
 try:  # pragma: no cover - optional dependency
@@ -25,7 +26,13 @@ def _mss():  # pragma: no cover - tiny wrapper for easier monkeypatching
 class Watcher(threading.Thread):
     """Background thread that polls the screen for new questions."""
 
-    def __init__(self, region: Tuple[int, int, int, int], queue: Queue, cfg: Settings) -> None:
+    def __init__(
+        self,
+        region: Tuple[int, int, int, int],
+        queue: Queue,
+        cfg: Settings,
+        ocr: OCRBackend | None = None,
+    ) -> None:
         super().__init__(daemon=True)
         self.region = region
         self.queue = queue
@@ -33,13 +40,14 @@ class Watcher(threading.Thread):
         self.stop_flag = threading.Event()
         self.pause_flag = threading.Event()
         self._last_hash: str | None = None
+        self.ocr_backend = ocr or PytesseractOCR()
 
     # -- basic helpers -------------------------------------------------
     def capture(self):  # pragma: no cover - trivial wrapper
         return _mss().mss().grab(self.region)
 
-    def ocr(self, img) -> str:  # pragma: no cover - placeholder for tests
-        return ""
+    def ocr(self, img) -> str:  # pragma: no cover - behaviour provided by backend
+        return self.ocr_backend(img)
 
     def is_new_question(self, text: str) -> bool:
         current = hash_text(text)

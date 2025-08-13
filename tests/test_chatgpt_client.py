@@ -2,6 +2,7 @@ import pytest
 
 from quiz_automation import chatgpt_client
 from quiz_automation.chatgpt_client import ChatGPTClient
+from quiz_automation.model_protocol import ModelClientProtocol
 from quiz_automation.config import settings
 
 
@@ -31,6 +32,7 @@ def _setup_client(monkeypatch) -> ChatGPTClient:
 def test_chatgpt_client_parses_json_response(monkeypatch):
     client = _setup_client(monkeypatch)
     assert client.ask("Q?", ["A", "B"]) == "B"
+    assert isinstance(client, ModelClientProtocol)
 
 
 def test_chatgpt_client_uses_settings(monkeypatch):

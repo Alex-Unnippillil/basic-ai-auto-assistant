@@ -1,19 +1,14 @@
-"""Model client protocol and simple local implementation."""
+"""Simple local implementation of :class:`ModelClientProtocol`."""
 from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import List, Protocol
+from typing import List
+
+from .model_protocol import ModelClientProtocol
 
 
-class ModelClientProtocol(Protocol):
-    """Minimal protocol for quiz model backends."""
-
-    def ask(self, question: str, options: List[str]) -> str:
-        """Return the letter corresponding to the chosen option."""
-
-
-class LocalModelClient:
+class LocalModelClient(ModelClientProtocol):
     """Pick the option sharing the most words with the question."""
 
     def ask(self, question: str, options: List[str]) -> str:

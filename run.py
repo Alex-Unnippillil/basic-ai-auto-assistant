@@ -4,10 +4,12 @@ from __future__ import annotations
 import argparse
 import logging
 
-from quiz_automation import QuizGUI
+from quiz_automation import QuizGUI, Stats
 from quiz_automation.runner import QuizRunner
 from quiz_automation.config import Settings
 from quiz_automation.logger import configure_logger
+from quiz_automation.chatgpt_client import ChatGPTClient
+from quiz_automation.model_client import LocalModelClient
 
 
 
@@ -36,7 +38,10 @@ def main(argv: list[str] | None = None) -> None:
         help="Path to a configuration file read by the Settings class",
     )
     parser.add_argument(
-
+        "--backend",
+        choices=["chatgpt", "local"],
+        default="chatgpt",
+        help="Model backend to use",
     )
     args = parser.parse_args(argv)
 
@@ -54,13 +59,15 @@ def main(argv: list[str] | None = None) -> None:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         options = list("ABCD")
 
+        client = ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
         runner = QuizRunner(
             cfg.quiz_region,
             cfg.chat_box,
             cfg.response_region,
             options,
             cfg.option_base,
-
+            model_client=client,
+            stats=Stats(),
         )
         runner.start()
         try:
@@ -68,11 +75,6 @@ def main(argv: list[str] | None = None) -> None:
                 runner.join(timeout=1)
                 if not runner.is_alive():
                     break
-                if (
-                    args.max_questions is not None
-                    and stats.questions_answered >= args.max_questions
-                ):
-                    runner.stop()
         except KeyboardInterrupt:
             runner.stop()
         finally:

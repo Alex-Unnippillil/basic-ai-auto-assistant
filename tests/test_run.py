@@ -1,6 +1,5 @@
-from unittest.mock import MagicMock
-from unittest.mock import MagicMock
 import logging
+from unittest.mock import MagicMock
 
 import run
 from quiz_automation.types import Point, Region
@@ -18,8 +17,7 @@ def test_headless_invokes_quiz_runner(monkeypatch):
         response_region=Region(7, 8, 9, 10),
         option_base=Point(11, 12),
     )
-    mock_settings = MagicMock(return_value=cfg)
-    monkeypatch.setattr(run, "Settings", mock_settings)
+    monkeypatch.setattr(run, "Settings", MagicMock(return_value=cfg))
 
     mock_configure = MagicMock()
     monkeypatch.setattr(run, "configure_logger", mock_configure)
@@ -31,31 +29,32 @@ def test_headless_invokes_quiz_runner(monkeypatch):
 
     run.main(["--mode", "headless"])
 
-    mock_settings.assert_called_once_with()
-    mock_configure.assert_called_once()
-    assert mock_configure.call_args.kwargs["level"] == logging.INFO
+    mock_chatgpt.assert_called_once_with()
+    mock_local.assert_not_called()
 
+    args, kwargs = mock_runner.call_args
+    assert args == (
         cfg.quiz_region,
         cfg.chat_box,
         cfg.response_region,
         list("ABCD"),
         cfg.option_base,
-
     )
+    assert kwargs["model_client"] == "client"
     assert "stats" in kwargs
+
     instance.start.assert_called_once_with()
     instance.join.assert_called()
 
 
 def test_config_and_log_level_flags(monkeypatch, tmp_path):
     cfg = MagicMock(
-        quiz_region=(1, 2, 3, 4),
-        chat_box=(5, 6),
-        response_region=(7, 8, 9, 10),
-        option_base=(11, 12),
+        quiz_region=Region(1, 2, 3, 4),
+        chat_box=Point(5, 6),
+        response_region=Region(7, 8, 9, 10),
+        option_base=Point(11, 12),
     )
-    mock_settings = MagicMock(return_value=cfg)
-    monkeypatch.setattr(run, "Settings", mock_settings)
+    monkeypatch.setattr(run, "Settings", MagicMock(return_value=cfg))
 
     instance = MagicMock()
     instance.is_alive.return_value = False
@@ -85,6 +84,8 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
 
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.DEBUG
-    mock_settings.assert_called_once_with(_env_file=str(config_file))
-
-
+    mock_chatgpt.assert_not_called()
+    mock_local.assert_called_once_with()
+    mock_runner.assert_called_once()
+    assert mock_runner.call_args.kwargs["model_client"] == "local"
+    assert mock_runner.call_args.args[0] == cfg.quiz_region

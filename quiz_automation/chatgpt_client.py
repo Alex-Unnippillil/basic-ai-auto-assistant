@@ -41,7 +41,7 @@ class ChatGPTClient:
 
     def _completion(self, prompt: str) -> str:
         response = self.client.responses.create(
-            model=settings.model,
+            model=settings.openai_model,
             input=[
                 {"role": "system", "content": settings.openai_system_prompt},
                 {"role": "user", "content": prompt},

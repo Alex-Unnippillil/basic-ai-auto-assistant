@@ -73,7 +73,7 @@ quiz-automation --mode headless --log-level DEBUG --config settings.env
 
 ## CLI example
 ```python
-from quiz_automation import answer_question_via_chatgpt, Stats
+from quiz_automation import answer_question, Stats
 from quiz_automation.config import Settings
 import pyautogui
 
@@ -81,7 +81,7 @@ cfg = Settings()
 options = list("ABCD")
 
 img = pyautogui.screenshot(cfg.quiz_region)
-letter = answer_question_via_chatgpt(
+letter = answer_question(
     img,
     cfg.chat_box,
     cfg.response_region,

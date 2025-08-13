@@ -34,6 +34,11 @@ def main(argv: list[str] | None = None) -> None:
         "--config",
         help="Path to a configuration file read by the Settings class",
     )
+    parser.add_argument(
+        "--max-questions",
+        type=int,
+        help="Maximum number of questions to answer before exiting",
+    )
     args = parser.parse_args(argv)
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
@@ -55,8 +60,14 @@ def main(argv: list[str] | None = None) -> None:
             cfg.response_region,
             options,
             cfg.option_base,
+            max_questions=args.max_questions,
         )
         runner.start()
+        try:
+            runner.join()
+        except KeyboardInterrupt:
+            runner.stop()
+            runner.join()
 
 
 if __name__ == "__main__":

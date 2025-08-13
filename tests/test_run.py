@@ -28,9 +28,15 @@ def test_headless_invokes_quiz_runner(monkeypatch):
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.INFO
     mock_runner.assert_called_once_with(
-        cfg.quiz_region, cfg.chat_box, cfg.response_region, list("ABCD"), cfg.option_base
+        cfg.quiz_region,
+        cfg.chat_box,
+        cfg.response_region,
+        list("ABCD"),
+        cfg.option_base,
+        max_questions=None,
     )
     instance.start.assert_called_once_with()
+    instance.join.assert_called_once_with()
 
 
 def test_config_and_log_level_flags(monkeypatch, tmp_path):
@@ -64,5 +70,40 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.DEBUG
     mock_settings.assert_called_once_with(_env_file=str(config_file))
-    mock_runner.assert_called_once()
+    mock_runner.assert_called_once_with(
+        cfg.quiz_region,
+        cfg.chat_box,
+        cfg.response_region,
+        list("ABCD"),
+        cfg.option_base,
+        max_questions=None,
+    )
+
+
+def test_max_questions_flag_forwards_to_runner(monkeypatch):
+    instance = MagicMock()
+    mock_runner = MagicMock(return_value=instance)
+    monkeypatch.setattr(run, "QuizRunner", mock_runner)
+
+    cfg = MagicMock(
+        quiz_region=Region(1, 2, 3, 4),
+        chat_box=Point(5, 6),
+        response_region=Region(7, 8, 9, 10),
+        option_base=Point(11, 12),
+    )
+    monkeypatch.setattr(run, "Settings", MagicMock(return_value=cfg))
+    monkeypatch.setattr(run, "configure_logger", MagicMock())
+
+    run.main(["--mode", "headless", "--max-questions", "5"])
+
+    mock_runner.assert_called_once_with(
+        cfg.quiz_region,
+        cfg.chat_box,
+        cfg.response_region,
+        list("ABCD"),
+        cfg.option_base,
+        max_questions=5,
+    )
+    instance.start.assert_called_once_with()
+    instance.join.assert_called_once_with()
 

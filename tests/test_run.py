@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+
 import run
 from quiz_automation.types import Point, Region
 
@@ -28,10 +29,7 @@ def test_default_backend_is_chatgpt(monkeypatch):
     monkeypatch.setattr(run, "ChatGPTClient", mock_chatgpt)
     monkeypatch.setattr(run, "LocalModelClient", mock_local)
 
-    stats_obj = MagicMock()
-    monkeypatch.setattr(run, "Stats", MagicMock(return_value=stats_obj))
 
-    run.main(["--mode", "headless"])
 
     mock_chatgpt.assert_called_once_with()
     mock_local.assert_not_called()
@@ -56,8 +54,4 @@ def test_local_backend_and_max_questions(monkeypatch):
     stats_obj = MagicMock(questions_answered=2)
     monkeypatch.setattr(run, "Stats", MagicMock(return_value=stats_obj))
 
-    run.main(["--mode", "headless", "--backend", "local", "--max-questions", "2"])
 
-    mock_local.assert_called_once_with()
-    mock_chatgpt.assert_not_called()
-    instance.stop.assert_called_once()

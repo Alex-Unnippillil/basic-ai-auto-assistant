@@ -46,6 +46,14 @@ def test_chatgpt_client_uses_settings(monkeypatch):
     assert kwargs["temperature"] == 0.42
 
 
+def test_chatgpt_client_passes_temperature(monkeypatch):
+    monkeypatch.setattr(settings, "temperature", 0.1)
+    client = _setup_client(monkeypatch)
+    client.ask("Q?", ["Opt1", "Opt2"])
+    kwargs = DummyOpenAI.last_kwargs
+    assert kwargs["temperature"] == 0.1
+
+
 def test_chatgpt_client_retries_on_transient_error(monkeypatch):
     client = _setup_client(monkeypatch)
     calls = {"n": 0}

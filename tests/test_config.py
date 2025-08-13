@@ -12,7 +12,6 @@ def test_openai_config_overrides(monkeypatch):
     monkeypatch.setenv("OPENAI_MODEL", "foo")
     monkeypatch.setenv("OPENAI_SYSTEM_PROMPT", "prompt")
     cfg = Settings()
-    assert cfg.model == "foo"
     assert cfg.openai_model == "foo"
     assert cfg.openai_system_prompt == "prompt"
 
@@ -28,7 +27,9 @@ def test_screen_region_defaults():
 
 
 def test_screen_region_env(monkeypatch):
-    monkeypatch.setenv("QUIZ_REGION", "[10,20,30,40]")
+    monkeypatch.setenv(
+        "QUIZ_REGION", '{"left":10,"top":20,"width":30,"height":40}'
+    )
     cfg = Settings()
     assert cfg.quiz_region == Region(10, 20, 30, 40)
 

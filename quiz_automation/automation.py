@@ -39,6 +39,7 @@ from .stats import Stats
 from .logger import get_logger
 from .clicker import Clicker
 from .types import Point, Region
+from .model_client import ModelClientProtocol
 
 logger = get_logger(__name__)
 
@@ -147,6 +148,7 @@ def answer_question_via_chatgpt(
     option_base: Point,
     stats: Stats | None = None,
     poll_interval: float = 0.5,
+    client: ModelClientProtocol | None = None,
 ) -> str:
     """Send ``quiz_image`` to ChatGPT and click the model's chosen answer.
 
@@ -157,10 +159,14 @@ def answer_question_via_chatgpt(
     """
 
     start = time.time()
-    send_to_chatgpt(quiz_image, chatgpt_box)
-    response = read_chatgpt_response(response_region, poll_interval=poll_interval)
-    matches = re.findall(r"[A-D]", response.upper())
-    letter = matches[-1] if matches else ""
+    if client is None:
+        send_to_chatgpt(quiz_image, chatgpt_box)
+        response = read_chatgpt_response(response_region, poll_interval=poll_interval)
+        matches = re.findall(r"[A-D]", response.upper())
+        letter = matches[-1] if matches else ""
+    else:
+        response = ""
+        letter = client.ask(quiz_image, list(options))
 
     try:
         idx = options.index(letter)

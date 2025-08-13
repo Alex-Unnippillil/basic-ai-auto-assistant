@@ -8,6 +8,7 @@ from typing import Sequence
 
 from . import automation
 from .automation import answer_question_via_chatgpt
+from .model_client import ModelClientProtocol
 from .stats import Stats
 from .gui import QuizGUI
 from .logger import get_logger
@@ -27,6 +28,7 @@ class QuizRunner(threading.Thread):
         options: Sequence[str],
         option_base: Point,
         *,
+        model_client: ModelClientProtocol | None = None,
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
         poll_interval: float = 0.5,
@@ -37,6 +39,7 @@ class QuizRunner(threading.Thread):
         self.response_region = response_region
         self.options = options
         self.option_base = option_base
+        self.model_client = model_client
         self.stop_flag = threading.Event()
         self.stats = stats or Stats()
         self.gui = gui
@@ -74,6 +77,7 @@ class QuizRunner(threading.Thread):
                         self.option_base,
                         stats=self.stats,
                         poll_interval=self.poll_interval,
+                        client=self.model_client,
                     )
                 except Exception:
                     logger.exception("Error while answering question")

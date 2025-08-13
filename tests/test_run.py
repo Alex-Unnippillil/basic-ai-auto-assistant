@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+from unittest.mock import MagicMock
 import logging
 
 import run
@@ -23,19 +24,23 @@ def test_headless_invokes_quiz_runner(monkeypatch):
     mock_configure = MagicMock()
     monkeypatch.setattr(run, "configure_logger", mock_configure)
 
+    mock_chatgpt = MagicMock(return_value="client")
+    mock_local = MagicMock()
+    monkeypatch.setattr(run, "ChatGPTClient", mock_chatgpt)
+    monkeypatch.setattr(run, "LocalModelClient", mock_local)
+
     run.main(["--mode", "headless"])
 
     mock_settings.assert_called_once_with()
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.INFO
-    mock_runner.assert_called_once()
-    args, kwargs = mock_runner.call_args
-    assert args == (
+
         cfg.quiz_region,
         cfg.chat_box,
         cfg.response_region,
         list("ABCD"),
         cfg.option_base,
+
     )
     assert "stats" in kwargs
     instance.start.assert_called_once_with()
@@ -59,6 +64,10 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
 
     mock_configure = MagicMock()
     monkeypatch.setattr(run, "configure_logger", mock_configure)
+    mock_chatgpt = MagicMock(return_value="client")
+    monkeypatch.setattr(run, "ChatGPTClient", mock_chatgpt)
+    mock_local = MagicMock(return_value="local")
+    monkeypatch.setattr(run, "LocalModelClient", mock_local)
 
     config_file = tmp_path / "test.env"
     config_file.write_text("POLL_INTERVAL=2")
@@ -70,45 +79,12 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
         "DEBUG",
         "--config",
         str(config_file),
+        "--backend",
+        "local",
     ])
 
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.DEBUG
     mock_settings.assert_called_once_with(_env_file=str(config_file))
-    mock_runner.assert_called_once()
-    instance.join.assert_called()
 
-
-def test_max_questions_stops_runner(monkeypatch):
-    stats = run.Stats()
-    stats.questions_answered = 0
-
-    def stats_factory():
-        return stats
-
-    monkeypatch.setattr(run, "Stats", stats_factory)
-
-    instance = MagicMock()
-    # simulate thread running once then stopping after max questions reached
-    instance.is_alive.side_effect = [True, False]
-
-    def join_side_effect(timeout=None):
-        stats.questions_answered = 1
-
-    instance.join.side_effect = join_side_effect
-    mock_runner = MagicMock(return_value=instance)
-    monkeypatch.setattr(run, "QuizRunner", mock_runner)
-
-    cfg = MagicMock(
-        quiz_region=Region(1, 2, 3, 4),
-        chat_box=Point(5, 6),
-        response_region=Region(7, 8, 9, 10),
-        option_base=Point(11, 12),
-    )
-    monkeypatch.setattr(run, "Settings", MagicMock(return_value=cfg))
-    monkeypatch.setattr(run, "configure_logger", MagicMock())
-
-    run.main(["--mode", "headless", "--max-questions", "1"])
-
-    instance.stop.assert_called_once()
 

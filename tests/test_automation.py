@@ -56,8 +56,7 @@ def test_read_chatgpt_response_default_poll_interval(monkeypatch):
         "time",
         types.SimpleNamespace(time=lambda: 0, sleep=lambda s: sleeps.append(s)),
     )
-
-
+    text = automation.read_chatgpt_response(Region(0, 0, 1, 1))
     assert text == "hello"
     assert sleeps == [0.5]
 
@@ -92,7 +91,7 @@ def test_read_chatgpt_response_custom_poll_interval(monkeypatch):
         types.SimpleNamespace(time=lambda: 0, sleep=lambda s: sleeps.append(s)),
     )
 
-    text = automation.read_chatgpt_response((0, 0, 1, 1), poll_interval=0.1)
+    text = automation.read_chatgpt_response(Region(0, 0, 1, 1), poll_interval=0.1)
     assert text == "hello"
     assert sleeps == [0.1]
 
@@ -171,4 +170,32 @@ def test_answer_question_custom_poll_interval(monkeypatch):
     )
     assert letter == "A"
     assert calls == [0.2]
+
+
+def test_answer_question_with_client(monkeypatch):
+    """Providing a model client bypasses ChatGPT UI helpers."""
+
+    class DummyClient:
+        def ask(self, question, options):
+            return "C"
+
+    monkeypatch.setattr(
+        automation,
+        "send_to_chatgpt",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("should not be called")),
+    )
+    monkeypatch.setattr(
+        automation,
+        "read_chatgpt_response",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("should not be called")),
+    )
+    clicks: list[int] = []
+    monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: clicks.append(idx))
+
+    letter = automation.answer_question_via_chatgpt(
+        "question", Point(0, 0), Region(0, 0, 1, 1), ["A", "B", "C"], Point(0, 0), client=DummyClient()
+    )
+
+    assert letter == "C"
+    assert clicks == [2]
 

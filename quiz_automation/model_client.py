@@ -1,9 +1,16 @@
-"""Local heuristic model for choosing quiz answers."""
+"""Model client protocol and simple local implementation."""
 from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import List
+from typing import List, Protocol
+
+
+class ModelClientProtocol(Protocol):
+    """Minimal protocol for quiz model backends."""
+
+    def ask(self, question: str, options: List[str]) -> str:
+        """Return the letter corresponding to the chosen option."""
 
 
 class LocalModelClient:

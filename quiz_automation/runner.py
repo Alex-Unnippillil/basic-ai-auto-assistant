@@ -7,7 +7,7 @@ import time
 from typing import Sequence
 
 from . import automation
-from .automation import answer_question_via_chatgpt
+from .automation import answer_question
 from .model_client import ModelClientProtocol
 from .stats import Stats
 from .gui import QuizGUI
@@ -50,7 +50,7 @@ class QuizRunner(threading.Thread):
         self.stop_flag.set()
 
     # The behaviour of this method is tested indirectly via unit tests that
-    # patch :func:`answer_question_via_chatgpt`, so it is excluded from coverage
+    # patch :func:`answer_question`, so it is excluded from coverage
     def run(self) -> None:  # pragma: no cover
         q: queue.Queue = queue.Queue(maxsize=1)
 
@@ -69,7 +69,7 @@ class QuizRunner(threading.Thread):
                 except queue.Empty:
                     continue
                 try:
-                    answer_question_via_chatgpt(
+                    answer_question(
                         img,
                         self.chatgpt_box,
                         self.response_region,

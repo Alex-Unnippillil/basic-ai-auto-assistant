@@ -43,6 +43,7 @@ class ChatGPTClient(ModelClientProtocol):
     def _completion(self, prompt: str) -> str:
         response = self.client.responses.create(
             model=settings.openai_model,
+            # Pass through the configured temperature for deterministic behavior
             temperature=settings.temperature,
             input=[
                 {"role": "system", "content": settings.openai_system_prompt},

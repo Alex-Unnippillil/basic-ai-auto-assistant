@@ -65,11 +65,16 @@ quiz-automation --mode gui
 
 # custom config and debug logging
 quiz-automation --mode headless --log-level DEBUG --config settings.env
+
+# offline mode with the built-in heuristic model
+quiz-automation --mode headless --backend local
 ```
 
 `--log-level` sets the logging verbosity (e.g., ``DEBUG``, ``INFO``) and
 `--config` points to a ``.env``-style file loaded before instantiating the
-``Settings`` class.
+``Settings`` class. Use ``--backend`` to choose the model backend: ``chatgpt``
+relies on the OpenAI API while ``local`` uses a simple heuristic and requires
+no network access. The default is ``chatgpt``.
 
 ## CLI example
 ```python

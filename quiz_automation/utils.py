@@ -8,6 +8,9 @@ import io
 import logging
 import subprocess
 import sys
+from typing import Any
+
+from .types import Region
 
 
 logger = logging.getLogger(__name__)
@@ -50,8 +53,10 @@ def _copy_windows(img: Any) -> bool:
 
 def _copy_macos(img: Any) -> bool:
     with subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, close_fds=True) as proc:  # type: ignore[call-arg]
-        with proc.stdin:  # type: ignore[attr-defined]
-            img.save(proc.stdin, "PNG")
+        stdin = proc.stdin
+        assert stdin is not None
+        with stdin:
+            img.save(stdin, "PNG")
     return True
 
 
@@ -61,8 +66,10 @@ def _copy_linux(img: Any) -> bool:
         stdin=subprocess.PIPE,
         close_fds=True,
     ) as proc:  # type: ignore[call-arg]
-        with proc.stdin:  # type: ignore[attr-defined]
-            img.save(proc.stdin, "PNG")
+        stdin = proc.stdin
+        assert stdin is not None
+        with stdin:
+            img.save(stdin, "PNG")
     return True
 
 

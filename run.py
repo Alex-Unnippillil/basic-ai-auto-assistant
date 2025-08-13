@@ -8,6 +8,7 @@ from quiz_automation import QuizGUI
 from quiz_automation.runner import QuizRunner
 from quiz_automation.config import Settings
 from quiz_automation.logger import configure_logger
+from quiz_automation.stats import Stats
 
 
 
@@ -36,7 +37,9 @@ def main(argv: list[str] | None = None) -> None:
         help="Path to a configuration file read by the Settings class",
     )
     parser.add_argument(
-
+        "--max-questions",
+        type=int,
+        help="Stop after answering this many questions",
     )
     args = parser.parse_args(argv)
 
@@ -54,13 +57,15 @@ def main(argv: list[str] | None = None) -> None:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         options = list("ABCD")
 
+        stats = Stats()
+
         runner = QuizRunner(
             cfg.quiz_region,
             cfg.chat_box,
             cfg.response_region,
             options,
             cfg.option_base,
-
+            stats=stats,
         )
         runner.start()
         try:

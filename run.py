@@ -8,6 +8,8 @@ from quiz_automation import QuizGUI
 from quiz_automation.runner import QuizRunner
 from quiz_automation.config import Settings
 from quiz_automation.logger import configure_logger
+from quiz_automation.chatgpt_client import ChatGPTClient
+from quiz_automation.model_client import LocalModelClient, ModelClientProtocol
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -34,6 +36,12 @@ def main(argv: list[str] | None = None) -> None:
         "--config",
         help="Path to a configuration file read by the Settings class",
     )
+    parser.add_argument(
+        "--backend",
+        choices=["chatgpt", "local"],
+        default="chatgpt",
+        help="Model backend to use",
+    )
     args = parser.parse_args(argv)
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
@@ -49,12 +57,18 @@ def main(argv: list[str] | None = None) -> None:
     else:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         options = list("ABCD")
+        client: ModelClientProtocol
+        if args.backend == "local":
+            client = LocalModelClient()
+        else:
+            client = ChatGPTClient()
         runner = QuizRunner(
             cfg.quiz_region,
             cfg.chat_box,
             cfg.response_region,
             options,
             cfg.option_base,
+            model_client=client,
         )
         runner.start()
 

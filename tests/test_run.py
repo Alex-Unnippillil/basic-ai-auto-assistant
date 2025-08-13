@@ -1,5 +1,4 @@
 from unittest.mock import MagicMock
-from unittest.mock import MagicMock
 import logging
 
 import run
@@ -34,13 +33,13 @@ def test_headless_invokes_quiz_runner(monkeypatch):
     mock_settings.assert_called_once_with()
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.INFO
-
+    args, kwargs = mock_runner.call_args
+    assert args == (
         cfg.quiz_region,
         cfg.chat_box,
         cfg.response_region,
         list("ABCD"),
         cfg.option_base,
-
     )
     assert "stats" in kwargs
     instance.start.assert_called_once_with()
@@ -86,5 +85,4 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.DEBUG
     mock_settings.assert_called_once_with(_env_file=str(config_file))
-
 

@@ -12,6 +12,10 @@ from typing import Any
 
 from .types import Region
 
+from typing import Any
+
+from .types import Region
+
 
 logger = logging.getLogger(__name__)
 

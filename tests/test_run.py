@@ -22,13 +22,22 @@ def test_headless_invokes_quiz_runner(monkeypatch):
     mock_configure = MagicMock()
     monkeypatch.setattr(run, "configure_logger", mock_configure)
 
+    mock_client = MagicMock()
+    monkeypatch.setattr(run, "ChatGPTClient", MagicMock(return_value=mock_client))
+    monkeypatch.setattr(run, "LocalModelClient", MagicMock())
+
     run.main(["--mode", "headless"])
 
     mock_settings.assert_called_once_with()
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.INFO
     mock_runner.assert_called_once_with(
-        cfg.quiz_region, cfg.chat_box, cfg.response_region, list("ABCD"), cfg.option_base
+        cfg.quiz_region,
+        cfg.chat_box,
+        cfg.response_region,
+        list("ABCD"),
+        cfg.option_base,
+        model=mock_client,
     )
     instance.start.assert_called_once_with()
 
@@ -49,6 +58,10 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
     mock_configure = MagicMock()
     monkeypatch.setattr(run, "configure_logger", mock_configure)
 
+    mock_client = MagicMock()
+    monkeypatch.setattr(run, "ChatGPTClient", MagicMock(return_value=mock_client))
+    monkeypatch.setattr(run, "LocalModelClient", MagicMock())
+
     config_file = tmp_path / "test.env"
     config_file.write_text("POLL_INTERVAL=2")
 
@@ -59,10 +72,13 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
         "DEBUG",
         "--config",
         str(config_file),
+        "--backend",
+        "local",
     ])
 
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.DEBUG
     mock_settings.assert_called_once_with(_env_file=str(config_file))
     mock_runner.assert_called_once()
-
+    run.LocalModelClient.assert_called_once()
+    run.ChatGPTClient.assert_not_called()

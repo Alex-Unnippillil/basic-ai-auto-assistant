@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from typing import Literal, Optional
+from typing import Literal, Optional, Sequence
 
 from pydantic import BaseModel, ValidationError
 
@@ -18,6 +18,7 @@ except Exception:  # pragma: no cover
     APITimeoutError = APIConnectionError = RateLimitError = ()  # type: ignore
 
 from .config import settings
+from .model_protocol import ModelClientProtocol
 
 
 class QuizAnswer(BaseModel):
@@ -31,7 +32,7 @@ else:  # pragma: no cover - openai not installed
     TRANSIENT_ERRORS = (TimeoutError, ConnectionError)
 
 
-class ChatGPTClient:
+class ChatGPTClient(ModelClientProtocol):
     """Wrapper around the OpenAI SDK that returns a single-letter answer."""
 
     def __init__(self, api_key: Optional[str] = None) -> None:
@@ -41,7 +42,7 @@ class ChatGPTClient:
 
     def _completion(self, prompt: str) -> str:
         response = self.client.responses.create(
-            model=settings.model,
+            model=getattr(settings, "model", settings.openai_model),
             input=[
                 {"role": "system", "content": settings.openai_system_prompt},
                 {"role": "user", "content": prompt},
@@ -66,8 +67,15 @@ class ChatGPTClient:
         )
         return response.output_text
 
-    def ask(self, prompt: str, retries: int = 3) -> str:
+    def _build_prompt(self, question: str, options: Sequence[str]) -> str:
+        lines = [question]
+        for i, opt in enumerate(options):
+            lines.append(f"{chr(ord('A') + i)}. {opt}")
+        return "\n".join(lines)
+
+    def ask(self, question: str, options: Sequence[str], retries: int = 3) -> str:
         """Return the model's single-letter answer with basic retries."""
+        prompt = self._build_prompt(question, options)
         for attempt in range(1, retries + 1):
             try:
                 raw = self._completion(prompt)

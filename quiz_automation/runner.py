@@ -1,4 +1,4 @@
-"""Thread that repeatedly answers quiz questions via the ChatGPT UI."""
+"""Thread that repeatedly answers quiz questions using a model client."""
 from __future__ import annotations
 
 import queue
@@ -7,11 +7,11 @@ import time
 from typing import Sequence
 
 from . import automation
-from .automation import answer_question_via_chatgpt
 from .stats import Stats
 from .gui import QuizGUI
 from .logger import get_logger
 from .types import Point, Region
+from .model_protocol import ModelClientProtocol
 
 logger = get_logger(__name__)
 
@@ -30,6 +30,7 @@ class QuizRunner(threading.Thread):
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
         poll_interval: float = 0.5,
+        model: ModelClientProtocol,
     ) -> None:
         super().__init__(daemon=True)
         self.quiz_region = quiz_region
@@ -37,6 +38,7 @@ class QuizRunner(threading.Thread):
         self.response_region = response_region
         self.options = options
         self.option_base = option_base
+        self.model = model
         self.stop_flag = threading.Event()
         self.stats = stats or Stats()
         self.gui = gui
@@ -46,8 +48,8 @@ class QuizRunner(threading.Thread):
         """Signal the runner to stop."""
         self.stop_flag.set()
 
-    # The behaviour of this method is tested indirectly via unit tests that
-    # patch :func:`answer_question_via_chatgpt`, so it is excluded from coverage
+    # The behaviour of this method is exercised in unit tests, so it is
+    # excluded from coverage.
     def run(self) -> None:  # pragma: no cover
         q: queue.Queue = queue.Queue(maxsize=1)
 
@@ -65,16 +67,17 @@ class QuizRunner(threading.Thread):
                     img = q.get(timeout=0.1)
                 except queue.Empty:
                     continue
+                start = time.time()
                 try:
-                    answer_question_via_chatgpt(
-                        img,
-                        self.chatgpt_box,
-                        self.response_region,
-                        self.options,
-                        self.option_base,
-                        stats=self.stats,
-                        poll_interval=self.poll_interval,
-                    )
+                    question = automation.pytesseract.image_to_string(img)
+                    letter = self.model.ask(question, self.options)
+                    try:
+                        idx = self.options.index(letter)
+                    except ValueError:
+                        idx = max(0, ord(letter) - ord("A"))
+                    automation.click_option(self.option_base, idx)
+                    duration = time.time() - start
+                    self.stats.record(duration, len(question.split()))
                 except Exception:
                     logger.exception("Error while answering question")
                     self.stats.record_error()

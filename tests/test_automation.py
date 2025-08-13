@@ -56,8 +56,7 @@ def test_read_chatgpt_response_default_poll_interval(monkeypatch):
         "time",
         types.SimpleNamespace(time=lambda: 0, sleep=lambda s: sleeps.append(s)),
     )
-
-
+    text = automation.read_chatgpt_response(Region(0, 0, 1, 1))
     assert text == "hello"
     assert sleeps == [0.5]
 
@@ -92,7 +91,7 @@ def test_read_chatgpt_response_custom_poll_interval(monkeypatch):
         types.SimpleNamespace(time=lambda: 0, sleep=lambda s: sleeps.append(s)),
     )
 
-    text = automation.read_chatgpt_response((0, 0, 1, 1), poll_interval=0.1)
+    text = automation.read_chatgpt_response(Region(0, 0, 1, 1), poll_interval=0.1)
     assert text == "hello"
     assert sleeps == [0.1]
 

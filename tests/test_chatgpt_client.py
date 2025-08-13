@@ -30,14 +30,14 @@ def _setup_client(monkeypatch) -> ChatGPTClient:
 
 def test_chatgpt_client_parses_json_response(monkeypatch):
     client = _setup_client(monkeypatch)
-    assert client.ask("Q?") == "B"
+    assert client.ask("Q?", ["A", "B"]) == "B"
 
 
 def test_chatgpt_client_uses_settings(monkeypatch):
-    monkeypatch.setattr(settings, "model", "my-model")
+    monkeypatch.setattr(settings, "openai_model", "my-model")
     monkeypatch.setattr(settings, "openai_system_prompt", "my prompt")
     client = _setup_client(monkeypatch)
-    client.ask("Q?")
+    client.ask("Q?", ["A", "B"])
     kwargs = DummyOpenAI.last_kwargs
     assert kwargs["model"] == "my-model"
     assert kwargs["input"][0]["content"] == "my prompt"
@@ -55,7 +55,7 @@ def test_chatgpt_client_retries_on_transient_error(monkeypatch):
 
     monkeypatch.setattr(client, "_completion", fake)
     monkeypatch.setattr("quiz_automation.chatgpt_client.time.sleep", lambda s: None)
-    assert client.ask("Q?") == "A"
+    assert client.ask("Q?", ["A", "B"]) == "A"
     assert calls["n"] == 2
 
 
@@ -63,7 +63,7 @@ def test_chatgpt_client_invalid_schema(monkeypatch):
     client = _setup_client(monkeypatch)
     monkeypatch.setattr(client, "_completion", lambda prompt: '{"answer":"Z"}')
     with pytest.raises(RuntimeError):
-        client.ask("Q?")
+        client.ask("Q?", ["A", "B"]) 
 
 
 def test_chatgpt_client_raises_after_transient_errors(monkeypatch):
@@ -75,4 +75,4 @@ def test_chatgpt_client_raises_after_transient_errors(monkeypatch):
     monkeypatch.setattr(client, "_completion", fail)
     monkeypatch.setattr("quiz_automation.chatgpt_client.time.sleep", lambda s: None)
     with pytest.raises(RuntimeError):
-        client.ask("Q?", retries=2)
+        client.ask("Q?", ["A", "B"], retries=2)

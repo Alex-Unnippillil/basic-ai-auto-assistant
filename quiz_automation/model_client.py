@@ -3,15 +3,17 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import List
+from typing import Sequence
+
+from .model_protocol import ModelClientProtocol
 
 
-class LocalModelClient:
+class LocalModelClient(ModelClientProtocol):
     """Pick the option sharing the most words with the question."""
 
-    def ask(self, question: str, options: List[str]) -> str:
+    def ask(self, question: str, options: Sequence[str]) -> str:
         question_words = Counter(re.findall(r"\w+", question.lower()))
-        scores: List[int] = []
+        scores: list[int] = []
         for opt in options:
             opt_words = Counter(re.findall(r"\w+", opt.lower()))
             scores.append(sum((question_words & opt_words).values()))

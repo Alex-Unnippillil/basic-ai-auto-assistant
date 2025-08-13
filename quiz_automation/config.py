@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
+import re
 
 from .types import Point, Region
 
@@ -24,6 +25,36 @@ class Settings(BaseSettings):
     option_base: Point = Point(100, 520)
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
+
+    @field_validator("quiz_region", "response_region", mode="before")
+    @classmethod
+    def _parse_region(cls, v):
+        if isinstance(v, Region):
+            return v
+        if isinstance(v, str):
+            nums = [int(n) for n in re.findall(r"-?\d+", v)]
+        elif isinstance(v, (list, tuple)):
+            nums = [int(n) for n in v]
+        else:
+            raise TypeError("Invalid region value")
+        if len(nums) != 4:
+            raise ValueError("Region requires four integers")
+        return Region(*nums)
+
+    @field_validator("chat_box", "option_base", mode="before")
+    @classmethod
+    def _parse_point(cls, v):
+        if isinstance(v, Point):
+            return v
+        if isinstance(v, str):
+            nums = [int(n) for n in re.findall(r"-?\d+", v)]
+        elif isinstance(v, (list, tuple)):
+            nums = [int(n) for n in v]
+        else:
+            raise TypeError("Invalid point value")
+        if len(nums) != 2:
+            raise ValueError("Point requires two integers")
+        return Point(*nums)
 
 
 

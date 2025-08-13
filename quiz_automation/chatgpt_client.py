@@ -47,6 +47,7 @@ class ChatGPTClient(ModelClientProtocol):
                 {"role": "system", "content": settings.openai_system_prompt},
                 {"role": "user", "content": prompt},
             ],
+            temperature=settings.temperature,
             response_format={
                 "type": "json_schema",
                 "json_schema": {

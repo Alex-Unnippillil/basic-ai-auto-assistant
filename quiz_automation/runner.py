@@ -32,6 +32,7 @@ class QuizRunner(threading.Thread):
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
         poll_interval: float = 0.5,
+        max_questions: int | None = None,
     ) -> None:
         super().__init__(daemon=True)
         self.quiz_region = quiz_region
@@ -44,6 +45,7 @@ class QuizRunner(threading.Thread):
         self.stats = stats or Stats()
         self.gui = gui
         self.poll_interval = poll_interval
+        self.max_questions = max_questions
 
     def stop(self) -> None:
         """Signal the runner to stop."""
@@ -79,6 +81,11 @@ class QuizRunner(threading.Thread):
                         poll_interval=self.poll_interval,
                         client=self.model_client,
                     )
+                    if (
+                        self.max_questions is not None
+                        and self.stats.questions_answered >= self.max_questions
+                    ):
+                        self.stop()
                 except Exception:
                     logger.exception("Error while answering question")
                     self.stats.record_error()

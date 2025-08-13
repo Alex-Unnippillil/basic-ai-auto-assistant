@@ -36,7 +36,9 @@ def main(argv: list[str] | None = None) -> None:
         help="Path to a configuration file read by the Settings class",
     )
     parser.add_argument(
-
+        "--max-questions",
+        type=int,
+        help="Stop after answering this many questions.",
     )
     args = parser.parse_args(argv)
 
@@ -60,22 +62,13 @@ def main(argv: list[str] | None = None) -> None:
             cfg.response_region,
             options,
             cfg.option_base,
-
+            max_questions=args.max_questions,
         )
         runner.start()
         try:
-            while True:
-                runner.join(timeout=1)
-                if not runner.is_alive():
-                    break
-                if (
-                    args.max_questions is not None
-                    and stats.questions_answered >= args.max_questions
-                ):
-                    runner.stop()
+            runner.join()
         except KeyboardInterrupt:
             runner.stop()
-        finally:
             runner.join()
 
 

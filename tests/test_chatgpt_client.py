@@ -35,11 +35,13 @@ def test_chatgpt_client_parses_json_response(monkeypatch):
 
 def test_chatgpt_client_uses_settings(monkeypatch):
     monkeypatch.setattr(settings, "openai_model", "my-model")
+    monkeypatch.setattr(settings, "temperature", 0.42)
     monkeypatch.setattr(settings, "openai_system_prompt", "my prompt")
     client = _setup_client(monkeypatch)
     client.ask("Q?", ["Opt1", "Opt2"])
     kwargs = DummyOpenAI.last_kwargs
     assert kwargs["model"] == "my-model"
+    assert kwargs["temperature"] == 0.42
     assert kwargs["input"][0]["content"] == "my prompt"
     assert "Opt2" in kwargs["input"][1]["content"]
 

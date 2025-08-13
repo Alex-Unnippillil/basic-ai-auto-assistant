@@ -25,3 +25,8 @@ full = [
 
 [project.scripts]
 quiz-automation = "run:main"
+
+[tool.mypy]
+files = ["quiz_automation/utils.py"]
+ignore_missing_imports = true
+follow_imports = "skip"

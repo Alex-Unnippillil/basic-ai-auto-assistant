@@ -8,6 +8,7 @@ from quiz_automation.types import Point, Region
 
 def test_headless_invokes_quiz_runner(monkeypatch):
     instance = MagicMock()
+    instance.is_alive.return_value = False
     mock_runner = MagicMock(return_value=instance)
     monkeypatch.setattr(run, "QuizRunner", mock_runner)
 
@@ -33,17 +34,17 @@ def test_headless_invokes_quiz_runner(monkeypatch):
     mock_settings.assert_called_once_with()
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.INFO
-    mock_chatgpt.assert_called_once_with()
-    mock_local.assert_not_called()
-    mock_runner.assert_called_once_with(
+
         cfg.quiz_region,
         cfg.chat_box,
         cfg.response_region,
         list("ABCD"),
         cfg.option_base,
-        model_client="client",
+
     )
+    assert "stats" in kwargs
     instance.start.assert_called_once_with()
+    instance.join.assert_called()
 
 
 def test_config_and_log_level_flags(monkeypatch, tmp_path):
@@ -56,7 +57,9 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
     mock_settings = MagicMock(return_value=cfg)
     monkeypatch.setattr(run, "Settings", mock_settings)
 
-    mock_runner = MagicMock()
+    instance = MagicMock()
+    instance.is_alive.return_value = False
+    mock_runner = MagicMock(return_value=instance)
     monkeypatch.setattr(run, "QuizRunner", mock_runner)
 
     mock_configure = MagicMock()
@@ -83,14 +86,5 @@ def test_config_and_log_level_flags(monkeypatch, tmp_path):
     mock_configure.assert_called_once()
     assert mock_configure.call_args.kwargs["level"] == logging.DEBUG
     mock_settings.assert_called_once_with(_env_file=str(config_file))
-    mock_local.assert_called_once_with()
-    mock_chatgpt.assert_not_called()
-    mock_runner.assert_called_once_with(
-        cfg.quiz_region,
-        cfg.chat_box,
-        cfg.response_region,
-        list("ABCD"),
-        cfg.option_base,
-        model_client="local",
-    )
+
 

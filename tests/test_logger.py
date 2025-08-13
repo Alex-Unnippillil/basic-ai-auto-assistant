@@ -31,7 +31,7 @@ def test_automation_logs_message(monkeypatch, caplog):
     )
     monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
 
-    letter = automation.answer_question_via_chatgpt(
+    letter = automation.answer_question(
         "img", Point(0, 0), Region(0, 0, 10, 10), ["A", "B"], Point(0, 0)
     )
     assert letter == "B"

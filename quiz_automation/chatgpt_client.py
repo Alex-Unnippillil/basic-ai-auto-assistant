@@ -18,7 +18,7 @@ except Exception:  # pragma: no cover
     APITimeoutError = APIConnectionError = RateLimitError = ()  # type: ignore
 
 from .config import settings
-from .model_client import ModelClientProtocol
+from .model_protocol import ModelClientProtocol
 
 
 class QuizAnswer(BaseModel):

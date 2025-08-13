@@ -7,7 +7,7 @@ area is provided here.
 """
 
 from .automation import (
-    answer_question_via_chatgpt,
+    answer_question,
     click_option,
     read_chatgpt_response,
     send_to_chatgpt,
@@ -19,7 +19,7 @@ from .stats import Stats
 __all__ = [
     "QuizRunner",
     "QuizGUI",
-    "answer_question_via_chatgpt",
+    "answer_question",
     "send_to_chatgpt",
     "read_chatgpt_response",
     "click_option",

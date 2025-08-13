@@ -39,7 +39,7 @@ from .stats import Stats
 from .logger import get_logger
 from .clicker import Clicker
 from .types import Point, Region
-from .model_client import ModelClientProtocol
+from .model_protocol import ModelClientProtocol
 
 logger = get_logger(__name__)
 
@@ -47,7 +47,7 @@ __all__ = [
     "send_to_chatgpt",
     "read_chatgpt_response",
     "click_option",
-    "answer_question_via_chatgpt",
+    "answer_question",
 ]
 
 
@@ -140,7 +140,7 @@ def click_option(base: Point, index: int, offset: int = 40) -> None:
     Clicker(base, offset).click_option(index)
 
 
-def answer_question_via_chatgpt(
+def answer_question(
     quiz_image: Any,
     chatgpt_box: Point,
     response_region: Region,

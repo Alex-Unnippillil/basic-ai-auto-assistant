@@ -143,7 +143,7 @@ def test_answer_question_fallback_to_first_option(monkeypatch):
 
     monkeypatch.setattr(automation, "click_option", fake_click_option)
 
-    letter = automation.answer_question_via_chatgpt(
+    letter = automation.answer_question(
         "img", Point(0, 0), Region(0, 0, 1, 1), ["A", "B", "C"], Point(0, 0)
     )
 
@@ -152,7 +152,7 @@ def test_answer_question_fallback_to_first_option(monkeypatch):
 
 
 def test_answer_question_custom_poll_interval(monkeypatch):
-    """``answer_question_via_chatgpt`` forwards ``poll_interval``."""
+    """``answer_question`` forwards ``poll_interval``."""
 
     calls: list[float] = []
 
@@ -165,7 +165,7 @@ def test_answer_question_custom_poll_interval(monkeypatch):
     monkeypatch.setattr(automation, "read_chatgpt_response", fake_read)
     monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
 
-    letter = automation.answer_question_via_chatgpt(
+    letter = automation.answer_question(
         "img", (0, 0), (0, 0, 1, 1), ["A", "B"], (0, 0), poll_interval=0.2
     )
     assert letter == "A"
@@ -192,7 +192,7 @@ def test_answer_question_with_client(monkeypatch):
     clicks: list[int] = []
     monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: clicks.append(idx))
 
-    letter = automation.answer_question_via_chatgpt(
+    letter = automation.answer_question(
         "question", Point(0, 0), Region(0, 0, 1, 1), ["A", "B", "C"], Point(0, 0), client=DummyClient()
     )
 

@@ -32,15 +32,15 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     runner = QuizRunner(Region(0, 0, 10, 10), Point(0, 0), Region(0, 0, 10, 10), ["A", "B"], Point(0, 0))
 
-    orig = automation.answer_question_via_chatgpt
+    orig = automation.answer_question
 
     def wrapped(*args, **kwargs):
         result = orig(*args, **kwargs)
         runner.stop()
         return result
 
-    monkeypatch.setattr(automation, "answer_question_via_chatgpt", wrapped)
-    monkeypatch.setattr("quiz_automation.runner.answer_question_via_chatgpt", wrapped)
+    monkeypatch.setattr(automation, "answer_question", wrapped)
+    monkeypatch.setattr("quiz_automation.runner.answer_question", wrapped)
 
     runner.start()
     runner.join(timeout=1)

@@ -34,7 +34,7 @@ def test_chatgpt_client_parses_json_response(monkeypatch):
 
 
 def test_chatgpt_client_uses_settings(monkeypatch):
-    monkeypatch.setattr(settings, "model", "my-model")
+    monkeypatch.setattr(settings, "openai_model", "my-model")
     monkeypatch.setattr(settings, "openai_system_prompt", "my prompt")
     client = _setup_client(monkeypatch)
     client.ask("Q?")

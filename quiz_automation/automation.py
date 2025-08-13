@@ -40,6 +40,8 @@ from .logger import get_logger
 from .clicker import Clicker
 from .types import Point, Region
 from .model_client import ModelClientProtocol
+from . import ocr
+from .config import settings
 
 logger = get_logger(__name__)
 
@@ -47,7 +49,7 @@ __all__ = [
     "send_to_chatgpt",
     "read_chatgpt_response",
     "click_option",
-    "answer_question_via_chatgpt",
+    "answer_question",
 ]
 
 
@@ -140,7 +142,7 @@ def click_option(base: Point, index: int, offset: int = 40) -> None:
     Clicker(base, offset).click_option(index)
 
 
-def answer_question_via_chatgpt(
+def answer_question(
     quiz_image: Any,
     chatgpt_box: Point,
     response_region: Region,
@@ -150,12 +152,12 @@ def answer_question_via_chatgpt(
     poll_interval: float = 0.5,
     client: ModelClientProtocol | None = None,
 ) -> str:
-    """Send ``quiz_image`` to ChatGPT and click the model's chosen answer.
+    """Return the model's chosen answer for ``quiz_image``.
 
-    The function blocks until text appears in ``response_region`` or raises a
-    :class:`TimeoutError`.  The returned string is the letter that was clicked.
-    ``stats`` can be supplied to record per-question metrics. ``poll_interval``
-    controls how frequently the ChatGPT response region is polled.
+    When ``client`` is ``None`` the quiz image is sent to the ChatGPT web UI and
+    the response is read via OCR.  Otherwise ``quiz_image`` is processed with the
+    configured OCR backend and the resulting question and option text is passed
+    to ``client.ask``.
     """
 
     start = time.time()
@@ -165,8 +167,13 @@ def answer_question_via_chatgpt(
         matches = re.findall(r"[A-D]", response.upper())
         letter = matches[-1] if matches else ""
     else:
+        ocr_backend = ocr.get_backend(settings.ocr_backend)
+        text = ocr_backend(quiz_image)
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        question = lines[0] if lines else ""
+        option_texts = lines[1:] or list(options)
         response = ""
-        letter = client.ask(quiz_image, list(options))
+        letter = client.ask(question, option_texts)
 
     try:
         idx = options.index(letter)
@@ -177,7 +184,7 @@ def answer_question_via_chatgpt(
         idx = max(0, ord(letter) - ord("A"))
 
     click_option(option_base, idx)
-    logger.info("ChatGPT chose %s", letter)
+    logger.info("Model chose %s", letter)
 
     if stats is not None:
         duration = time.time() - start

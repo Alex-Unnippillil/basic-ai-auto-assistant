@@ -143,7 +143,7 @@ def test_answer_question_fallback_to_first_option(monkeypatch):
 
     monkeypatch.setattr(automation, "click_option", fake_click_option)
 
-    letter = automation.answer_question_via_chatgpt(
+    letter = automation.answer_question(
         "img", Point(0, 0), Region(0, 0, 1, 1), ["A", "B", "C"], Point(0, 0)
     )
 
@@ -152,7 +152,7 @@ def test_answer_question_fallback_to_first_option(monkeypatch):
 
 
 def test_answer_question_custom_poll_interval(monkeypatch):
-    """``answer_question_via_chatgpt`` forwards ``poll_interval``."""
+    """``answer_question`` forwards ``poll_interval``."""
 
     calls: list[float] = []
 
@@ -165,7 +165,7 @@ def test_answer_question_custom_poll_interval(monkeypatch):
     monkeypatch.setattr(automation, "read_chatgpt_response", fake_read)
     monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
 
-    letter = automation.answer_question_via_chatgpt(
+    letter = automation.answer_question(
         "img", (0, 0), (0, 0, 1, 1), ["A", "B"], (0, 0), poll_interval=0.2
     )
     assert letter == "A"
@@ -189,13 +189,35 @@ def test_answer_question_with_client(monkeypatch):
         "read_chatgpt_response",
         lambda *a, **k: (_ for _ in ()).throw(RuntimeError("should not be called")),
     )
+    monkeypatch.setattr(automation.ocr, "get_backend", lambda name: lambda img: "Q\nA\nB\nC")
     clicks: list[int] = []
     monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: clicks.append(idx))
 
-    letter = automation.answer_question_via_chatgpt(
+    letter = automation.answer_question(
         "question", Point(0, 0), Region(0, 0, 1, 1), ["A", "B", "C"], Point(0, 0), client=DummyClient()
     )
 
     assert letter == "C"
     assert clicks == [2]
+
+
+def test_answer_question_passes_text_to_client(monkeypatch):
+    """OCR text is forwarded to ``client.ask`` instead of the raw image."""
+
+    captured: list[tuple[str, list[str]]] = []
+
+    class DummyClient:
+        def ask(self, question, options):
+            captured.append((question, options))
+            return "A"
+
+    monkeypatch.setattr(automation.ocr, "get_backend", lambda name: lambda img: "Q1\nopt1\nopt2")
+    monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
+
+    letter = automation.answer_question(
+        "img", Point(0, 0), Region(0, 0, 1, 1), ["A", "B"], Point(0, 0), client=DummyClient()
+    )
+
+    assert letter == "A"
+    assert captured == [("Q1", ["opt1", "opt2"])]
 

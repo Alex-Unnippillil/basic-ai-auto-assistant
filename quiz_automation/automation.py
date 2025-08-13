@@ -40,6 +40,8 @@ from .logger import get_logger
 from .clicker import Clicker
 from .types import Point, Region
 from .model_client import ModelClientProtocol
+from . import ocr
+from .config import settings
 
 logger = get_logger(__name__)
 
@@ -47,7 +49,7 @@ __all__ = [
     "send_to_chatgpt",
     "read_chatgpt_response",
     "click_option",
-    "answer_question_via_chatgpt",
+    "answer_question",
 ]
 
 
@@ -140,7 +142,7 @@ def click_option(base: Point, index: int, offset: int = 40) -> None:
     Clicker(base, offset).click_option(index)
 
 
-def answer_question_via_chatgpt(
+def answer_question(
     quiz_image: Any,
     chatgpt_box: Point,
     response_region: Region,
@@ -150,12 +152,12 @@ def answer_question_via_chatgpt(
     poll_interval: float = 0.5,
     client: ModelClientProtocol | None = None,
 ) -> str:
-    """Send ``quiz_image`` to ChatGPT and click the model's chosen answer.
+    """Send ``quiz_image`` to a model and click the chosen answer.
 
-    The function blocks until text appears in ``response_region`` or raises a
-    :class:`TimeoutError`.  The returned string is the letter that was clicked.
-    ``stats`` can be supplied to record per-question metrics. ``poll_interval``
-    controls how frequently the ChatGPT response region is polled.
+    When ``client`` is ``None`` the image is pasted into the ChatGPT UI and the
+    response region is polled until an answer appears.  When ``client`` is
+    provided the image is OCR'd using the configured backend and the resulting
+    question and option text are forwarded to ``client.ask``.
     """
 
     start = time.time()
@@ -165,8 +167,21 @@ def answer_question_via_chatgpt(
         matches = re.findall(r"[A-D]", response.upper())
         letter = matches[-1] if matches else ""
     else:
+        ocr_backend = ocr.get_backend(settings.ocr_backend)
+        text = ocr_backend(quiz_image)
+        lines = [l.strip() for l in text.splitlines() if l.strip()]
+        question_lines: list[str] = []
+        option_texts: list[str] = []
+        valid_letters = {o.upper() for o in options}
+        for line in lines:
+            match = re.match(r"([A-Za-z])[).:-]?\s*(.*)", line)
+            if match and match.group(1).upper() in valid_letters:
+                option_texts.append(match.group(2).strip())
+            else:
+                question_lines.append(line)
+        question_text = " ".join(question_lines)
         response = ""
-        letter = client.ask(quiz_image, list(options))
+        letter = client.ask(question_text, option_texts)
 
     try:
         idx = options.index(letter)

@@ -30,6 +30,7 @@ class QuizRunner(threading.Thread):
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
         poll_interval: float = 0.5,
+        max_questions: int | None = None,
     ) -> None:
         super().__init__(daemon=True)
         self.quiz_region = quiz_region
@@ -41,6 +42,7 @@ class QuizRunner(threading.Thread):
         self.stats = stats or Stats()
         self.gui = gui
         self.poll_interval = poll_interval
+        self.max_questions = max_questions
 
     def stop(self) -> None:
         """Signal the runner to stop."""
@@ -81,6 +83,12 @@ class QuizRunner(threading.Thread):
                 finally:
                     if self.gui is not None:
                         self.gui.update(self.stats)
+
+                if (
+                    self.max_questions is not None
+                    and self.stats.questions_answered >= self.max_questions
+                ):
+                    self.stop()
 
         t_capture = threading.Thread(target=capture, daemon=True)
         t_worker = threading.Thread(target=worker, daemon=True)

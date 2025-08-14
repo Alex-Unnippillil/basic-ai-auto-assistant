@@ -28,6 +28,15 @@ full = [
 quiz-automation = "run:main"
 
 [tool.mypy]
-files = ["quiz_automation/utils.py"]
+files = ["quiz_automation", "tests"]
+strict = true
 ignore_missing_imports = true
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = ["quiz_automation.*", "tests.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "quiz_automation.utils"
+ignore_errors = false

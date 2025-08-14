@@ -22,11 +22,15 @@ The requirements file installs everything needed to run the full automation.  Fo
 * `opencv-python` – computer‑vision helpers
 * `PySide6` – GUI for live statistics
 
-## `quiz-automation` command
-The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
+## Getting Started
+Set the environment variables that configure the OpenAI API and screen regions.
 
-### Environment variables
-Set `OPENAI_API_KEY` for access to the OpenAI API.  Additional settings read by the tool include `OPENAI_MODEL`, `OPENAI_SYSTEM_PROMPT`, `POLL_INTERVAL`, and `TEMPERATURE`.
+Required variables:
+
+- `OPENAI_API_KEY` – your OpenAI API key
+- `OPENAI_MODEL` – model to query (e.g., `o4-mini-high`)
+
+Additional settings consumed by the tool include `OPENAI_SYSTEM_PROMPT`, `POLL_INTERVAL`, and `TEMPERATURE`.
 
 Screen regions can be customized with `QUIZ_REGION`, `CHAT_BOX`, `RESPONSE_REGION`, and `OPTION_BASE`. Each is a JSON array of integers such as `QUIZ_REGION=[100,100,600,400]`.
 
@@ -44,6 +48,11 @@ OPENAI_MODEL=o4-mini-high
 # OPTION_BASE=[100,520]
 ```
 
+With the environment configured, use the `quiz-automation` command below to start answering questions.
+
+## `quiz-automation` command
+The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
+
 ### Optional dependencies
 Running the command in a headless environment only needs `pydantic`, `pydantic-settings`, and `mss`.  Installing the following extras enables full desktop automation:
 
@@ -53,28 +62,26 @@ Running the command in a headless environment only needs `pydantic`, `pydantic-s
 * `PySide6` – GUI for live statistics
 
 ### Running
-Invoke the script with a mode flag. Optional arguments control logging and
-configuration loading:
+Invoke the script with a mode flag. Optional arguments control the backend,
+question limit, logging, and configuration loading:
 
 ```bash
-# headless
-quiz-automation --mode headless
+# GUI mode using the OpenAI API backend
+quiz-automation --mode gui --backend chatgpt
 
-# GUI
-quiz-automation --mode gui
+# Headless mode with the local heuristic backend and a 10 question limit
+quiz-automation --mode headless --backend local --max-questions 10
 
-# custom config and debug logging
+# Custom config and debug logging
 quiz-automation --mode headless --log-level DEBUG --config settings.env
-
-# offline mode with the built-in heuristic model
-quiz-automation --mode headless --backend local
 ```
 
+`--backend` chooses the model backend: ``chatgpt`` relies on the OpenAI API
+while ``local`` uses a simple heuristic and requires no network access.
+`--max-questions` limits how many questions are processed before exiting.
 `--log-level` sets the logging verbosity (e.g., ``DEBUG``, ``INFO``) and
 `--config` points to a ``.env``-style file loaded before instantiating the
-``Settings`` class. Use ``--backend`` to choose the model backend: ``chatgpt``
-relies on the OpenAI API while ``local`` uses a simple heuristic and requires
-no network access. The default is ``chatgpt``.
+``Settings`` class. The default backend is ``chatgpt``.
 
 ## CLI example
 ```python

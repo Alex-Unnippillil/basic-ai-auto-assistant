@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("pydantic_settings")
+
 import quiz_automation.ocr as ocr_module
 
 class DummyBackendOne:

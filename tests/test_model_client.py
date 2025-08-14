@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation.model_client import LocalModelClient
 
 

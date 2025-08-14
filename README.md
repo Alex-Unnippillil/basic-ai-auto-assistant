@@ -19,18 +19,34 @@ OPENAI_MODEL=o4-mini-high
 # OPENAI_SYSTEM_PROMPT="Reply with JSON {'answer':'A|B|C|D'}"
 # POLL_INTERVAL=1.0
 # TEMPERATURE=0.0
+# OCR_BACKEND=tesseract
 # QUIZ_REGION=[100,100,600,400]
 # CHAT_BOX=[800,900]
 # RESPONSE_REGION=[100,550,600,150]
 # OPTION_BASE=[100,520]
 ```
 
+Copy `.env.example` to `.env` and adjust values as needed. Key options:
+
+| Key | Description |
+| --- | --- |
+| `OPENAI_API_KEY` | OpenAI API key used for completions |
+| `OPENAI_MODEL` | Model name to query (default `o4-mini-high`) |
+| `OPENAI_SYSTEM_PROMPT` | System prompt sent before each question |
+| `POLL_INTERVAL` | Seconds to wait before scanning for the next question |
+| `TEMPERATURE` | Sampling temperature for the model |
+| `OCR_BACKEND` | OCR engine to use, e.g. `tesseract` |
+| `QUIZ_REGION` | `[x,y,w,h]` rectangle containing the quiz question |
+| `CHAT_BOX` | `[x,y]` coordinates of the ChatGPT input box |
+| `RESPONSE_REGION` | `[x,y,w,h]` region to OCR ChatGPT's answer |
+| `OPTION_BASE` | `[x,y]` origin for the answer choices |
+
 
 ## `quiz-automation` command
 The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
 
 ### Optional dependencies
-Running the command in a headless environment only needs `pydantic`, `pydantic-settings`, and `mss`.  Installing the following extras enables full desktop automation:
+Running the command in a headless environment only needs `pydantic`, `pydantic-settings`, and `mss`. Installing the extras enables full desktop automation:
 
 * `pyautogui` – screen control and screenshots
 * `pytesseract` – OCR for ChatGPT's responses
@@ -38,13 +54,30 @@ Running the command in a headless environment only needs `pydantic`, `pydantic-s
 * `PySide6` – GUI for live statistics
 * `numpy` – array helpers for CV routines
 
-### Running
-Invoke the script with a mode flag. Optional arguments control the backend,
-question limit, logging, and configuration loading:
+Install them together with:
 
 ```bash
+pip install -e .[full]
+```
 
+For OCR you must also install the Tesseract binary, for example:
 
+```bash
+sudo apt-get install tesseract-ocr
+```
+
+### Running
+1. Install the project:
+   ```bash
+   pip install -e .
+   ```
+   Include the `[full]` extras to enable GUI automation and OCR.
+2. Copy `.env.example` to `.env` and fill in the configuration values.
+3. Invoke the script with a mode flag. Optional arguments control the backend,
+   question limit, logging, and configuration loading:
+
+```bash
+quiz-automation --mode headless
 # Custom config and debug logging
 quiz-automation --mode headless --log-level DEBUG --config settings.env
 ```
@@ -92,6 +125,12 @@ runner = QuizRunner(
 runner.start()             # capture + worker threads
 ```
 The window updates with question count, average response time, tokens, and errors as the runner progresses.
+
+## Troubleshooting
+* **PyAutoGUI fails to control the screen** – ensure a desktop session is available. On Linux, run inside an X server (e.g. with `xvfb-run`) and grant screen‑recording permissions on macOS.
+* **`pytesseract` cannot find Tesseract** – install the `tesseract-ocr` package and confirm the binary is on your `PATH` or set the `TESSERACT_CMD` environment variable.
+* **No responses from OpenAI** – verify `OPENAI_API_KEY` and `OPENAI_MODEL` are set and that the machine has network access.
+* **Environment variables ignored** – pass `--config` with the path to your `.env` file or export the variables before running the CLI.
 
 ## Tests
 Run the test suite with:

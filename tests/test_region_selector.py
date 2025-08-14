@@ -1,4 +1,7 @@
 import pytest
+
+pytest.importorskip("pydantic_settings")
+
 import quiz_automation.region_selector as rs_mod
 from quiz_automation.types import Region
 

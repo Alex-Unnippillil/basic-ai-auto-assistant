@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 full = [
+    "numpy",
     "pyautogui",
     "pytesseract",
     "opencv-python",

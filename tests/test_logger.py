@@ -1,4 +1,7 @@
 import logging
+import pytest
+
+pytest.importorskip("pydantic_settings")
 
 from quiz_automation.logger import configure_logger, get_logger
 from quiz_automation import automation

@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation.utils import copy_image_to_clipboard, hash_text, validate_region
 from quiz_automation.types import Region
 

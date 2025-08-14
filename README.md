@@ -21,6 +21,7 @@ The requirements file installs everything needed to run the full automation.  Fo
 * `pytesseract` – OCR for ChatGPT's responses
 * `opencv-python` – computer‑vision helpers
 * `PySide6` – GUI for live statistics
+* `numpy` – array helpers for CV routines
 
 ## `quiz-automation` command
 The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
@@ -51,6 +52,7 @@ Running the command in a headless environment only needs `pydantic`, `pydantic-s
 * `pytesseract` – OCR for ChatGPT's responses
 * `opencv-python` – computer‑vision helpers
 * `PySide6` – GUI for live statistics
+* `numpy` – array helpers for CV routines
 
 ### Running
 Invoke the script with a mode flag. Optional arguments control logging and
@@ -123,4 +125,10 @@ The window updates with question count, average response time, tokens, and error
 Run the test suite with:
 ```bash
 pytest
+```
+Some tests rely on optional packages such as `numpy` and will be skipped when
+those dependencies are missing. Install the extras for full coverage:
+
+```bash
+pip install -e .[full]
 ```

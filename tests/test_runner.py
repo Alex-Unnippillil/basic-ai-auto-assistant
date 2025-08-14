@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation.runner import QuizRunner
 from quiz_automation import automation
 from quiz_automation.types import Point, Region

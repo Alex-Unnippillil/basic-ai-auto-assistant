@@ -67,7 +67,9 @@ def main(argv: list[str] | None = None) -> None:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         options = list("ABCD")
         stats = Stats()
-
+        model_client = (
+            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
+        )
 
         runner = QuizRunner(
             cfg.quiz_region,

@@ -9,6 +9,33 @@ Core modules provide:
 - a PySide6 GUI that displays live statistics
 - utilities for monitoring new questions, selecting screen regions, and simple CV heuristics
 
+## Getting Started
+
+Configure the following environment variables before running the quiz
+automation:
+
+- `OPENAI_API_KEY` – OpenAI API key
+- `OPENAI_MODEL` – model name such as `o4-mini-high`
+- `OPENAI_SYSTEM_PROMPT` – optional system prompt sent to the model
+- `POLL_INTERVAL` – seconds between screen captures
+- `TEMPERATURE` – sampling temperature
+- `QUIZ_REGION`, `CHAT_BOX`, `RESPONSE_REGION`, `OPTION_BASE` – screen
+  coordinates
+
+An example `.env` file:
+
+```dotenv
+OPENAI_API_KEY=sk-your-api-key
+OPENAI_MODEL=o4-mini-high
+# OPENAI_SYSTEM_PROMPT="Reply with JSON {'answer':'A|B|C|D'}"
+# POLL_INTERVAL=1.0
+# TEMPERATURE=0.0
+# QUIZ_REGION=[100,100,600,400]
+# CHAT_BOX=[800,900]
+# RESPONSE_REGION=[100,550,600,150]
+# OPTION_BASE=[100,520]
+```
+
 ## Installation
 ```bash
 python -m venv .venv
@@ -25,25 +52,6 @@ The requirements file installs everything needed to run the full automation.  Fo
 ## `quiz-automation` command
 The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
 
-### Environment variables
-Set `OPENAI_API_KEY` for access to the OpenAI API.  Additional settings read by the tool include `OPENAI_MODEL`, `OPENAI_SYSTEM_PROMPT`, `POLL_INTERVAL`, and `TEMPERATURE`.
-
-Screen regions can be customized with `QUIZ_REGION`, `CHAT_BOX`, `RESPONSE_REGION`, and `OPTION_BASE`. Each is a JSON array of integers such as `QUIZ_REGION=[100,100,600,400]`.
-
-An example `.env` file:
-
-```dotenv
-OPENAI_API_KEY=sk-your-api-key
-OPENAI_MODEL=o4-mini-high
-# OPENAI_SYSTEM_PROMPT="Reply with JSON {'answer':'A|B|C|D'}"
-# POLL_INTERVAL=1.0
-# TEMPERATURE=0.0
-# QUIZ_REGION=[100,100,600,400]
-# CHAT_BOX=[800,900]
-# RESPONSE_REGION=[100,550,600,150]
-# OPTION_BASE=[100,520]
-```
-
 ### Optional dependencies
 Running the command in a headless environment only needs `pydantic`, `pydantic-settings`, and `mss`.  Installing the following extras enables full desktop automation:
 
@@ -57,24 +65,22 @@ Invoke the script with a mode flag. Optional arguments control logging and
 configuration loading:
 
 ```bash
-# headless
-quiz-automation --mode headless
+# headless using the OpenAI backend for 10 questions
+quiz-automation --mode headless --backend chatgpt --max-questions 10
 
-# GUI
-quiz-automation --mode gui
+# GUI with the local backend for 5 questions
+quiz-automation --mode gui --backend local --max-questions 5
 
 # custom config and debug logging
 quiz-automation --mode headless --log-level DEBUG --config settings.env
-
-# offline mode with the built-in heuristic model
-quiz-automation --mode headless --backend local
 ```
 
-`--log-level` sets the logging verbosity (e.g., ``DEBUG``, ``INFO``) and
+`--log-level` sets the logging verbosity (e.g., ``DEBUG`` or ``INFO``).
 `--config` points to a ``.env``-style file loaded before instantiating the
-``Settings`` class. Use ``--backend`` to choose the model backend: ``chatgpt``
-relies on the OpenAI API while ``local`` uses a simple heuristic and requires
-no network access. The default is ``chatgpt``.
+``Settings`` class. `--backend` chooses the model backend: ``chatgpt`` relies on
+the OpenAI API while ``local`` uses a simple heuristic and requires no network
+access. `--max-questions` stops after the given number of prompts. The default
+backend is ``chatgpt``.
 
 ## CLI example
 ```python

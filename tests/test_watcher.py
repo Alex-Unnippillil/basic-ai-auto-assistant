@@ -5,6 +5,8 @@ from queue import Queue
 
 import pytest
 
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation import watcher as watcher_module
 from quiz_automation.config import Settings
 import quiz_automation.ocr as ocr_module

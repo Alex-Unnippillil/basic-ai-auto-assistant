@@ -1,7 +1,10 @@
 """Tests for :mod:`quiz_automation.stats`."""
 
-from quiz_automation.stats import Stats
 import pytest
+
+pytest.importorskip("pydantic_settings")
+
+from quiz_automation.stats import Stats
 
 
 

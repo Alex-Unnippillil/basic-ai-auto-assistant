@@ -1,5 +1,7 @@
 import pytest
 
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation import chatgpt_client
 from quiz_automation.chatgpt_client import ChatGPTClient
 from quiz_automation.config import settings

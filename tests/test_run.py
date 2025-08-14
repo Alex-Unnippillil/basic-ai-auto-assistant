@@ -11,5 +11,3 @@ from quiz_automation.types import Point, Region
         response_region=Region(7, 8, 9, 10),
         option_base=Point(11, 12),
     )
-
-

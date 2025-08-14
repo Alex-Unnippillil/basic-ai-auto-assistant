@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation.config import Settings
 from quiz_automation.types import Region
 

@@ -9,18 +9,7 @@ Core modules provide:
 - a PySide6 GUI that displays live statistics
 - utilities for monitoring new questions, selecting screen regions, and simple CV heuristics
 
-## Getting Started
 
-Configure the following environment variables before running the quiz
-automation:
-
-- `OPENAI_API_KEY` – OpenAI API key
-- `OPENAI_MODEL` – model name such as `o4-mini-high`
-- `OPENAI_SYSTEM_PROMPT` – optional system prompt sent to the model
-- `POLL_INTERVAL` – seconds between screen captures
-- `TEMPERATURE` – sampling temperature
-- `QUIZ_REGION`, `CHAT_BOX`, `RESPONSE_REGION`, `OPTION_BASE` – screen
-  coordinates
 
 An example `.env` file:
 
@@ -36,18 +25,6 @@ OPENAI_MODEL=o4-mini-high
 # OPTION_BASE=[100,520]
 ```
 
-## Installation
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-The requirements file installs everything needed to run the full automation.  For a minimal, headless setup only `pydantic`, `pydantic-settings`, and `mss` are necessary.  Optional extras that enable real desktop interaction are:
-
-* `pyautogui` – screen control and screenshots
-* `pytesseract` – OCR for ChatGPT's responses
-* `opencv-python` – computer‑vision helpers
-* `PySide6` – GUI for live statistics
 
 ## `quiz-automation` command
 The package installs a `quiz-automation` script that wraps the command‑line interface in `run.py`.
@@ -59,28 +36,19 @@ Running the command in a headless environment only needs `pydantic`, `pydantic-s
 * `pytesseract` – OCR for ChatGPT's responses
 * `opencv-python` – computer‑vision helpers
 * `PySide6` – GUI for live statistics
+* `numpy` – array helpers for CV routines
 
 ### Running
-Invoke the script with a mode flag. Optional arguments control logging and
-configuration loading:
+Invoke the script with a mode flag. Optional arguments control the backend,
+question limit, logging, and configuration loading:
 
 ```bash
-# headless using the OpenAI backend for 10 questions
-quiz-automation --mode headless --backend chatgpt --max-questions 10
 
-# GUI with the local backend for 5 questions
-quiz-automation --mode gui --backend local --max-questions 5
 
-# custom config and debug logging
+# Custom config and debug logging
 quiz-automation --mode headless --log-level DEBUG --config settings.env
 ```
 
-`--log-level` sets the logging verbosity (e.g., ``DEBUG`` or ``INFO``).
-`--config` points to a ``.env``-style file loaded before instantiating the
-``Settings`` class. `--backend` chooses the model backend: ``chatgpt`` relies on
-the OpenAI API while ``local`` uses a simple heuristic and requires no network
-access. `--max-questions` stops after the given number of prompts. The default
-backend is ``chatgpt``.
 
 ## CLI example
 ```python
@@ -129,4 +97,10 @@ The window updates with question count, average response time, tokens, and error
 Run the test suite with:
 ```bash
 pytest
+```
+Some tests rely on optional packages such as `numpy` and will be skipped when
+those dependencies are missing. Install the extras for full coverage:
+
+```bash
+pip install -e .[full]
 ```

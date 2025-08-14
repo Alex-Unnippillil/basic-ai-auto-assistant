@@ -10,6 +10,8 @@ from quiz_automation.config import Settings
 from quiz_automation.logger import configure_logger
 
 from quiz_automation.stats import Stats
+from quiz_automation.chatgpt_client import ChatGPTClient
+from quiz_automation.model_client import LocalModelClient
 
 
 
@@ -64,7 +66,7 @@ def main(argv: list[str] | None = None) -> None:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         options = list("ABCD")
         stats = Stats()
-
+        model_client = ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
 
         runner = QuizRunner(
             cfg.quiz_region,
@@ -72,7 +74,7 @@ def main(argv: list[str] | None = None) -> None:
             cfg.response_region,
             options,
             cfg.option_base,
-
+            model_client=model_client,
             stats=stats,
         )
         runner.start()

@@ -25,6 +25,20 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
 
+    @field_validator("poll_interval")
+    @classmethod
+    def _check_poll_interval(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("poll_interval must be greater than 0")
+        return v
+
+    @field_validator("temperature")
+    @classmethod
+    def _check_temperature(cls, v: float) -> float:
+        if v < 0:
+            raise ValueError("temperature must be non-negative")
+        return v
+
 
 
 # A module-level settings instance convenient for components that do not need

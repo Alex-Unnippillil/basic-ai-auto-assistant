@@ -54,13 +54,7 @@ Running the command in a headless environment only needs `pydantic`, `pydantic-s
 * `PySide6` – GUI for live statistics
 * `numpy` – array helpers for CV routines
 
-Install them together with:
 
-```bash
-pip install -e .[full]
-```
-
-For OCR you must also install the Tesseract binary, for example:
 
 ```bash
 sudo apt-get install tesseract-ocr
@@ -76,11 +70,7 @@ sudo apt-get install tesseract-ocr
 3. Invoke the script with a mode flag. Optional arguments control the backend,
    question limit, logging, and configuration loading:
 
-```bash
-quiz-automation --mode headless
-# Custom config and debug logging
-quiz-automation --mode headless --log-level DEBUG --config settings.env
-```
+
 
 
 ## CLI example

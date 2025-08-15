@@ -6,13 +6,11 @@ import logging
 
 from quiz_automation import QuizGUI
 from quiz_automation.runner import QuizRunner
-from quiz_automation.config import Settings
+from quiz_automation.config import Settings, settings as global_settings
 from quiz_automation.logger import configure_logger
 from quiz_automation.chatgpt_client import ChatGPTClient
 from quiz_automation.model_client import LocalModelClient
 from quiz_automation.stats import Stats
-from quiz_automation.chatgpt_client import ChatGPTClient
-from quiz_automation.model_client import LocalModelClient
 
 
 
@@ -51,6 +49,11 @@ def main(argv: list[str] | None = None) -> None:
         default="chatgpt",
         help="Model backend to use for answering questions",
     )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        help="Sampling temperature for the ChatGPT model",
+    )
     args = parser.parse_args(argv)
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
@@ -65,6 +68,9 @@ def main(argv: list[str] | None = None) -> None:
             print("PySide6 is not available; running without GUI.")
     else:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
+        if args.temperature is not None:
+            cfg.temperature = args.temperature
+            global_settings.temperature = args.temperature
         options = list("ABCD")
         stats = Stats()
         model_client = (

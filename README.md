@@ -40,13 +40,13 @@ Running the command in a headless environment only needs `pydantic`, `pydantic-s
 
 ### Running
 Invoke the script with a mode flag. Optional arguments control the backend,
-question limit, logging, and configuration loading:
+question limit, logging, configuration loading, and model temperature:
 
 ```bash
 
 
-# Custom config and debug logging
-quiz-automation --mode headless --log-level DEBUG --config settings.env
+# Custom config, temperature, and debug logging
+quiz-automation --mode headless --log-level DEBUG --temperature 0.7 --config settings.env
 ```
 
 

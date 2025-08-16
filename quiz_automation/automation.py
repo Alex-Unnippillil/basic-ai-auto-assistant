@@ -181,7 +181,7 @@ def answer_question(
                 question_lines.append(line)
         question_text = " ".join(question_lines)
         response = ""
-        letter = client.ask(question_text, option_texts)
+        letter = client.ask(question_text, option_texts).upper()
 
     try:
         idx = options.index(letter)
@@ -189,7 +189,7 @@ def answer_question(
         # Fall back to alphabetical ordering; ensures a valid index even if the
         # model returns an unexpected string such as "E".
         letter = letter or "A"
-        idx = max(0, ord(letter) - ord("A"))
+        idx = max(0, min(len(options) - 1, ord(letter) - ord("A")))
 
     click_option(option_base, idx)
     logger.info("ChatGPT chose %s", letter)

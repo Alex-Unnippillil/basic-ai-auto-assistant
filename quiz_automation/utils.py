@@ -7,7 +7,7 @@ import contextlib
 import hashlib
 import io
 import logging
-import subprocess
+import subprocess  # nosec B404
 import sys
 from typing import Any, Iterator
 
@@ -51,7 +51,9 @@ def _copy_windows(img: Any) -> bool:
 
 
 def _copy_macos(img: Any) -> bool:
-    with subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, close_fds=True) as proc:
+    with subprocess.Popen(
+        ["pbcopy"], stdin=subprocess.PIPE, close_fds=True
+    ) as proc:  # nosec
         stdin = proc.stdin
         assert stdin is not None
         with stdin:
@@ -64,7 +66,7 @@ def _copy_linux(img: Any) -> bool:
         ["xclip", "-selection", "clipboard", "-t", "image/png"],
         stdin=subprocess.PIPE,
         close_fds=True,
-    ) as proc:
+    ) as proc:  # nosec
         stdin = proc.stdin
         assert stdin is not None
         with stdin:

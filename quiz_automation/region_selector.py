@@ -14,6 +14,7 @@ from typing import Dict
 import json
 
 from .types import Region
+from .utils import validate_region
 
 try:  # pragma: no cover - optional dependency
     import pyautogui  # type: ignore
@@ -72,6 +73,11 @@ class RegionSelector:
         input("Move mouse to bottom right and press Enter")
         x2, y2 = pyautogui.position()
         region = Region(x1, y1, x2 - x1, y2 - y1)
+
+        try:
+            validate_region(region)
+        except ValueError as exc:
+            raise ValueError(f"Invalid region selected: {exc}") from exc
 
         self._regions[name] = region
         try:

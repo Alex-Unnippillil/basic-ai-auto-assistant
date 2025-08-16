@@ -1,6 +1,7 @@
 """Tests for :mod:`quiz_automation.stats`."""
 
 import pytest
+from threading import Thread
 
 pytest.importorskip("pydantic_settings")
 
@@ -27,5 +28,6 @@ def test_record_error_increments_error_counter() -> None:
     stats.record_error()
     stats.record_error()
     assert stats.errors == 2
+
 
 

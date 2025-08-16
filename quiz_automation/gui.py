@@ -1,15 +1,15 @@
-from __future__ import annotations
-
 """Simple PySide6 based GUI for displaying live quiz metrics."""
 
+from __future__ import annotations
+
 from typing import Optional
+
+from .stats import Stats
 
 try:  # pragma: no cover - optional graphical dependency
     from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 except Exception:  # pragma: no cover - fall back when Qt is unavailable
     QApplication = QLabel = QVBoxLayout = QWidget = None  # type: ignore
-
-from .stats import Stats
 
 
 class QuizGUI:

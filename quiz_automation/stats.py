@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Runtime statistics for quiz automation."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from threading import Lock

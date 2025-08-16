@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """OCR backends used by the quiz watcher."""
+
+from __future__ import annotations
 
 from importlib import import_module
 from typing import Any, Callable, Dict, Protocol
@@ -46,7 +46,9 @@ class PytesseractOCR:
 _BACKENDS: Dict[str, Callable[..., OCRBackend]] = {"pytesseract": PytesseractOCR}
 
 
-def register_backend(name: str, backend: Callable[..., OCRBackend] | type[OCRBackend]) -> None:
+def register_backend(
+    name: str, backend: Callable[..., OCRBackend] | type[OCRBackend]
+) -> None:
     """Register *backend* under *name*.
 
     ``backend`` may be a class implementing :class:`OCRBackend` or a callable

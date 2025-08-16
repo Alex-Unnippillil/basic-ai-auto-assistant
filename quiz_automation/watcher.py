@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Monitor the screen for new quiz questions and emit events."""
+
+from __future__ import annotations
 
 import logging
 import threading
@@ -9,8 +9,8 @@ from queue import Queue
 
 from .config import Settings
 from .ocr import OCRBackend, get_backend
-from .utils import hash_text
 from .types import Region
+from .utils import hash_text
 
 logger = logging.getLogger(__name__)
 

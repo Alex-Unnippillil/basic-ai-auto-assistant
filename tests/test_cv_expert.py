@@ -1,10 +1,15 @@
 import types
+
 import pytest
 
 pytest.importorskip("pydantic_settings")
 np = pytest.importorskip("numpy")
 
-from quiz_automation.cv_expert import AdvancedUIDetector, LayoutAnalyzer, UIElement
+from quiz_automation.cv_expert import (  # noqa: E402  # isort: skip
+    AdvancedUIDetector,
+    LayoutAnalyzer,
+    UIElement,
+)
 
 
 def test_detector_returns_empty_without_template(monkeypatch):

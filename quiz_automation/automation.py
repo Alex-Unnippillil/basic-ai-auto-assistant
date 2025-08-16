@@ -10,9 +10,9 @@ project and in the unit tests.
 
 from __future__ import annotations
 
-from typing import Any, Sequence
-import time
 import re
+import time
+from typing import Any, Sequence
 
 try:  # pragma: no cover - optional heavy dependency
     import pyautogui  # type: ignore
@@ -34,14 +34,14 @@ except Exception:  # pragma: no cover
         image_to_string=lambda *_, **__: "",
     )
 
-from .utils import copy_image_to_clipboard, validate_region
-from .stats import Stats
-from .logger import get_logger
-from .clicker import Clicker
-from .types import Point, Region
-from .model_client import ModelClientProtocol
 from . import ocr
+from .clicker import Clicker
 from .config import settings
+from .logger import get_logger
+from .model_client import ModelClientProtocol
+from .stats import Stats
+from .types import Point, Region
+from .utils import copy_image_to_clipboard, validate_region
 
 logger = get_logger(__name__)
 
@@ -169,7 +169,7 @@ def answer_question(
     else:
         ocr_backend = ocr.get_backend(settings.ocr_backend)
         text = ocr_backend(quiz_image)
-        lines = [l.strip() for l in text.splitlines() if l.strip()]
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
         question_lines: list[str] = []
         option_texts: list[str] = []
         valid_letters = {o.upper() for o in options}
@@ -200,4 +200,3 @@ def answer_question(
         stats.record(duration, tokens)
 
     return letter
-

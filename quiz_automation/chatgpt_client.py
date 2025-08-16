@@ -1,19 +1,38 @@
 """Minimal OpenAI client wrapper with retry logic."""
 from __future__ import annotations
 
-import json
 import time
-from typing import Optional
+from typing import List, Literal, Optional
+
+from pydantic import BaseModel, ValidationError
 
 try:  # pragma: no cover - optional dependency
-    from openai import OpenAI
+    from openai import (
+        APITimeoutError,
+        APIConnectionError,
+        RateLimitError,
+        OpenAI,
+    )
 except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
+    APITimeoutError = APIConnectionError = RateLimitError = ()  # type: ignore
 
 from .config import settings
+from .model_client import ModelClientProtocol
 
 
-class ChatGPTClient:
+class QuizAnswer(BaseModel):
+    """Expected schema for quiz answers."""
+
+    answer: Literal["A", "B", "C", "D"]
+
+if isinstance(APITimeoutError, type):
+    TRANSIENT_ERRORS = (APITimeoutError, APIConnectionError, RateLimitError, TimeoutError, ConnectionError)
+else:  # pragma: no cover - openai not installed
+    TRANSIENT_ERRORS = (TimeoutError, ConnectionError)
+
+
+class ChatGPTClient(ModelClientProtocol):
     """Wrapper around the OpenAI SDK that returns a single-letter answer."""
 
     def __init__(self, api_key: Optional[str] = None) -> None:
@@ -23,21 +42,51 @@ class ChatGPTClient:
 
     def _completion(self, prompt: str) -> str:
         response = self.client.responses.create(
-            model="o4-mini-high",
+            model=settings.openai_model,
+            # Pass through the configured temperature for deterministic behavior
+            temperature=settings.temperature,
             input=[
-                {"role": "system", "content": "Reply with JSON {'answer':'A|B|C|D'}"},
+                {"role": "system", "content": settings.openai_system_prompt},
                 {"role": "user", "content": prompt},
             ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "quiz_answer",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "answer": {
+                                "type": "string",
+                                "enum": ["A", "B", "C", "D"],
+                            }
+                        },
+                        "required": ["answer"],
+                        "additionalProperties": False,
+                    },
+                },
+            },
         )
         return response.output_text
 
-    def ask(self, prompt: str, retries: int = 3) -> str:
+    def ask(self, question: str, options: List[str], retries: int = 3) -> str:
         """Return the model's single-letter answer with basic retries."""
-        for attempt in range(retries):
+        opts = "\n".join(
+            f"{chr(ord('A') + i)}. {opt}" for i, opt in enumerate(options)
+        )
+        prompt = f"{question}\n{opts}" if opts else question
+
+        for attempt in range(1, retries + 1):
             try:
                 raw = self._completion(prompt)
-                data = json.loads(raw)
-                return data["answer"]
-            except Exception:
-                time.sleep(2**attempt)
+                data = QuizAnswer.model_validate_json(raw)
+                return data.answer
+            except TRANSIENT_ERRORS as exc:
+                if attempt == retries:
+                    raise RuntimeError(f"OpenAI transient error: {exc}") from exc
+                time.sleep(2 ** (attempt - 1))
+            except ValidationError as exc:
+                raise RuntimeError(f"Invalid model response: {exc}") from exc
+            except Exception as exc:
+                raise RuntimeError(f"Invalid model response: {exc}") from exc
         raise RuntimeError("Failed to get model response")

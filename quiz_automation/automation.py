@@ -10,8 +10,9 @@ project and in the unit tests.
 
 from __future__ import annotations
 
-from typing import Any, Sequence, Tuple
+from typing import Any, Sequence
 import time
+import re
 
 try:  # pragma: no cover - optional heavy dependency
     import pyautogui  # type: ignore
@@ -35,16 +36,24 @@ except Exception:  # pragma: no cover
 
 from .utils import copy_image_to_clipboard, validate_region
 from .stats import Stats
+from .logger import get_logger
+from .clicker import Clicker
+from .types import Point, Region
+from .model_client import ModelClientProtocol
+from . import ocr
+from .config import settings
+
+logger = get_logger(__name__)
 
 __all__ = [
     "send_to_chatgpt",
     "read_chatgpt_response",
     "click_option",
-    "answer_question_via_chatgpt",
+    "answer_question",
 ]
 
 
-def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
+def send_to_chatgpt(img: Any, box: Point) -> None:
     """Paste *img* into the ChatGPT input box located at ``box``.
 
     Parameters
@@ -52,7 +61,7 @@ def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
     img:
         Image object to be pasted into the ChatGPT input box.
     box:
-        ``(x, y)`` screen coordinates for the chat input area.
+        Screen coordinates for the chat input area.
 
     Raises
     ------
@@ -63,25 +72,28 @@ def send_to_chatgpt(img: Any, box: Tuple[int, int]) -> None:
     if not hasattr(pyautogui, "moveTo"):
         raise RuntimeError("pyautogui not available")
 
-    copy_image_to_clipboard(img)
+    if not copy_image_to_clipboard(img):
+        raise RuntimeError("failed to copy image to clipboard")
     pyautogui.moveTo(*box)
     # ``hotkey`` is easier for tests to monkeypatch than writing characters
     pyautogui.hotkey("ctrl", "v")
 
 
 def read_chatgpt_response(
-    response_region: Tuple[int, int, int, int],
+    response_region: Region,
     timeout: float = 20.0,
+    poll_interval: float = 0.5,
 ) -> str:
     """Return OCR'd text from ``response_region`` until non-empty or timeout.
 
     Parameters
     ----------
     response_region:
-        The screen rectangle (``x``, ``y``, ``width``, ``height``) containing
-        ChatGPT's textual response.
+        The screen rectangle containing ChatGPT's textual response.
     timeout:
         Maximum number of seconds to wait for a non-empty OCR result.
+    poll_interval:
+        Seconds to wait between OCR attempts.
 
     Returns
     -------
@@ -104,21 +116,22 @@ def read_chatgpt_response(
     validate_region(response_region)
     start = time.time()
     while time.time() - start < timeout:
-        img = pyautogui.screenshot(response_region)
+        img = pyautogui.screenshot(response_region.as_tuple())
         text = pytesseract.image_to_string(img).strip()
         if text:
             return text
-        time.sleep(0.5)
+        time.sleep(poll_interval)
 
     raise TimeoutError("No response detected")
 
 
-def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
+def click_option(base: Point, index: int, offset: int = 40) -> None:
     """Click the answer option at ``index`` using ``base`` as the first option.
 
     ``base`` corresponds to the coordinates of the first option on screen.  The
     function increments the ``y`` coordinate by ``offset`` for each subsequent
-    option and performs a mouse click at the calculated position.
+    option and performs a mouse click at the calculated position via
+    :class:`~quiz_automation.clicker.Clicker`.
 
     Raises
     ------
@@ -126,43 +139,60 @@ def click_option(base: Tuple[int, int], index: int, offset: int = 40) -> None:
         If :mod:`pyautogui` is not available.
     """
 
-    if not hasattr(pyautogui, "moveTo"):
-        raise RuntimeError("pyautogui not available")
-
-    x, y = base
-    pyautogui.moveTo(x, y + index * offset)
-    pyautogui.click()
+    Clicker(base, offset).click_option(index)
 
 
-def answer_question_via_chatgpt(
+def answer_question(
     quiz_image: Any,
-    chatgpt_box: Tuple[int, int],
-    response_region: Tuple[int, int, int, int],
+    chatgpt_box: Point,
+    response_region: Region,
     options: Sequence[str],
-    option_base: Tuple[int, int],
+    option_base: Point,
     stats: Stats | None = None,
+    poll_interval: float = 0.5,
+    client: ModelClientProtocol | None = None,
 ) -> str:
-    """Send ``quiz_image`` to ChatGPT and click the model's chosen answer.
+    """Send ``quiz_image`` to a model and click the chosen answer.
 
-    The function blocks until text appears in ``response_region`` or raises a
-    :class:`TimeoutError`.  The returned string is the letter that was clicked.
-    ``stats`` can be supplied to record per-question metrics.
+    When ``client`` is ``None`` the image is pasted into the ChatGPT UI and the
+    response region is polled until an answer appears.  When ``client`` is
+    provided the image is OCR'd using the configured backend and the resulting
+    question and option text are forwarded to ``client.ask``.
     """
 
     start = time.time()
-    send_to_chatgpt(quiz_image, chatgpt_box)
-    response = read_chatgpt_response(response_region)
+    if client is None:
+        send_to_chatgpt(quiz_image, chatgpt_box)
+        response = read_chatgpt_response(response_region, poll_interval=poll_interval)
+        matches = re.findall(r"[A-D]", response.upper())
+        letter = matches[-1] if matches else ""
+    else:
+        ocr_backend = ocr.get_backend(settings.ocr_backend)
+        text = ocr_backend(quiz_image)
+        lines = [l.strip() for l in text.splitlines() if l.strip()]
+        question_lines: list[str] = []
+        option_texts: list[str] = []
+        valid_letters = {o.upper() for o in options}
+        for line in lines:
+            match = re.match(r"([A-Za-z])[).:-]?\s*(.*)", line)
+            if match and match.group(1).upper() in valid_letters:
+                option_texts.append(match.group(2).strip())
+            else:
+                question_lines.append(line)
+        question_text = " ".join(question_lines)
+        response = ""
+        letter = client.ask(question_text, option_texts).upper()
 
-    # The model typically ends its reply with something like "Answer: B".
-    letter = response.strip().split()[-1].upper() if response else "A"
     try:
         idx = options.index(letter)
     except ValueError:
         # Fall back to alphabetical ordering; ensures a valid index even if the
         # model returns an unexpected string such as "E".
-        idx = max(0, ord(letter) - ord("A"))
+        letter = letter or "A"
+        idx = max(0, min(len(options) - 1, ord(letter) - ord("A")))
 
     click_option(option_base, idx)
+    logger.info("ChatGPT chose %s", letter)
 
     if stats is not None:
         duration = time.time() - start

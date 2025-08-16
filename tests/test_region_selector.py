@@ -1,4 +1,9 @@
+import pytest
+
+pytest.importorskip("pydantic_settings")
+
 import quiz_automation.region_selector as rs_mod
+from quiz_automation.types import Region
 
 
 def test_region_selector_persistence(tmp_path, monkeypatch):
@@ -8,7 +13,35 @@ def test_region_selector_persistence(tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda prompt="": None)
     monkeypatch.setattr(rs_mod.pyautogui, "position", lambda: next(positions))
     region = selector.select("quiz")
-    assert region == (1, 2, 4, 4)
+    assert region == Region(1, 2, 4, 4)
 
     selector2 = rs_mod.RegionSelector(path)
-    assert selector2.load("quiz") == (1, 2, 4, 4)
+    assert selector2.load("quiz") == Region(1, 2, 4, 4)
+
+
+def test_region_selector_missing_file(tmp_path):
+    path = tmp_path / "coords.json"
+    selector = rs_mod.RegionSelector(path)
+    with pytest.raises(KeyError):
+        selector.load("quiz")
+
+
+@pytest.mark.parametrize("content", ["{not json", '{"quiz": [1, 2, 3]}' ])
+def test_region_selector_corrupted_file(tmp_path, content):
+    path = tmp_path / "coords.json"
+    path.write_text(content, encoding="utf8")
+    selector = rs_mod.RegionSelector(path)
+    with pytest.raises(KeyError):
+        selector.load("quiz")
+
+
+def test_region_selector_invalid_region(tmp_path, monkeypatch):
+    path = tmp_path / "coords.json"
+    selector = rs_mod.RegionSelector(path)
+    positions = iter([(5, 5), (1, 1)])
+    monkeypatch.setattr("builtins.input", lambda prompt="": None)
+    monkeypatch.setattr(rs_mod.pyautogui, "position", lambda: next(positions))
+    with pytest.raises(ValueError):
+        selector.select("quiz")
+    assert "quiz" not in selector._regions
+    assert not path.exists()

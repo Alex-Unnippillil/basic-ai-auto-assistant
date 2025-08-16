@@ -4,12 +4,17 @@ from __future__ import annotations
 import queue
 import threading
 import time
-from typing import Sequence, Tuple
+from typing import Sequence
 
 from . import automation
-from .automation import answer_question_via_chatgpt
+from .automation import answer_question
+from .model_client import ModelClientProtocol
 from .stats import Stats
 from .gui import QuizGUI
+from .logger import get_logger
+from .types import Point, Region
+
+logger = get_logger(__name__)
 
 
 class QuizRunner(threading.Thread):
@@ -17,14 +22,16 @@ class QuizRunner(threading.Thread):
 
     def __init__(
         self,
-        quiz_region: Tuple[int, int, int, int],
-        chatgpt_box: Tuple[int, int],
-        response_region: Tuple[int, int, int, int],
+        quiz_region: Region,
+        chatgpt_box: Point,
+        response_region: Region,
         options: Sequence[str],
-        option_base: Tuple[int, int],
+        option_base: Point,
         *,
+        model_client: ModelClientProtocol | None = None,
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
+        poll_interval: float = 0.5,
     ) -> None:
         super().__init__(daemon=True)
         self.quiz_region = quiz_region
@@ -32,19 +39,25 @@ class QuizRunner(threading.Thread):
         self.response_region = response_region
         self.options = options
         self.option_base = option_base
+        self.model_client = model_client
         self.stop_flag = threading.Event()
         self.stats = stats or Stats()
         self.gui = gui
+        self.poll_interval = poll_interval
+
+    def stop(self) -> None:
+        """Signal the runner to stop."""
+        self.stop_flag.set()
 
     # The behaviour of this method is tested indirectly via unit tests that
-    # patch :func:`answer_question_via_chatgpt`, so it is excluded from coverage
+    # patch :func:`answer_question`, so it is excluded from coverage
     def run(self) -> None:  # pragma: no cover
         q: queue.Queue = queue.Queue(maxsize=1)
 
         def capture() -> None:
             while not self.stop_flag.is_set():
                 if q.empty():
-                    img = automation.pyautogui.screenshot(self.quiz_region)
+                    img = automation.pyautogui.screenshot(self.quiz_region.as_tuple())
                     q.put(img)
                 else:
                     time.sleep(0.05)
@@ -56,15 +69,18 @@ class QuizRunner(threading.Thread):
                 except queue.Empty:
                     continue
                 try:
-                    answer_question_via_chatgpt(
+                    answer_question(
                         img,
                         self.chatgpt_box,
                         self.response_region,
                         self.options,
                         self.option_base,
                         stats=self.stats,
+                        poll_interval=self.poll_interval,
+                        client=self.model_client,
                     )
                 except Exception:
+                    logger.exception("Error while answering question")
                     self.stats.record_error()
                 finally:
                     if self.gui is not None:

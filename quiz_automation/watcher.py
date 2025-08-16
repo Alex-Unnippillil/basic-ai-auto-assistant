@@ -2,13 +2,17 @@ from __future__ import annotations
 
 """Monitor the screen for new quiz questions and emit events."""
 
+import logging
 import threading
 import time
 from queue import Queue
-from typing import Tuple
 
 from .config import Settings
+from .ocr import OCRBackend, get_backend
 from .utils import hash_text
+from .types import Region
+
+logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
     from mss import mss
@@ -25,7 +29,13 @@ def _mss():  # pragma: no cover - tiny wrapper for easier monkeypatching
 class Watcher(threading.Thread):
     """Background thread that polls the screen for new questions."""
 
-    def __init__(self, region: Tuple[int, int, int, int], queue: Queue, cfg: Settings) -> None:
+    def __init__(
+        self,
+        region: Region,
+        queue: Queue,
+        cfg: Settings,
+        ocr: OCRBackend | None = None,
+    ) -> None:
         super().__init__(daemon=True)
         self.region = region
         self.queue = queue
@@ -33,13 +43,19 @@ class Watcher(threading.Thread):
         self.stop_flag = threading.Event()
         self.pause_flag = threading.Event()
         self._last_hash: str | None = None
+        self.ocr_backend = ocr or get_backend(cfg.ocr_backend)
 
     # -- basic helpers -------------------------------------------------
-    def capture(self):  # pragma: no cover - trivial wrapper
-        return _mss().mss().grab(self.region)
+    def capture(self):
+        try:
+            mss_module = _mss()
+        except Exception as exc:
+            logger.exception("Failed to obtain mss instance")
+            raise RuntimeError("Screen capture requires the 'mss' package") from exc
+        return mss_module.mss().grab(self.region.as_tuple())
 
-    def ocr(self, img) -> str:  # pragma: no cover - placeholder for tests
-        return ""
+    def ocr(self, img) -> str:  # pragma: no cover - behaviour provided by backend
+        return self.ocr_backend(img)
 
     def is_new_question(self, text: str) -> bool:
         current = hash_text(text)

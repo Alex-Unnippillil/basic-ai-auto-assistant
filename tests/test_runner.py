@@ -1,5 +1,10 @@
+import pytest
+
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation.runner import QuizRunner
 from quiz_automation import automation
+from quiz_automation.types import Point, Region
 
 
 def test_runner_triggers_full_flow(monkeypatch):
@@ -18,7 +23,7 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     monkeypatch.setattr(automation, "send_to_chatgpt", fake_send)
 
-    def fake_read(region, timeout=20.0):
+    def fake_read(region, timeout=20.0, poll_interval=0.5):
         calls["read"] += 1
         return "Answer A"
 
@@ -29,17 +34,17 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     monkeypatch.setattr(automation, "click_option", fake_click)
 
-    runner = QuizRunner((0, 0, 10, 10), (0, 0), (0, 0, 10, 10), ["A", "B"], (0, 0))
+    runner = QuizRunner(Region(0, 0, 10, 10), Point(0, 0), Region(0, 0, 10, 10), ["A", "B"], Point(0, 0))
 
-    orig = automation.answer_question_via_chatgpt
+    orig = automation.answer_question
 
     def wrapped(*args, **kwargs):
         result = orig(*args, **kwargs)
-        runner.stop_flag.set()
+        runner.stop()
         return result
 
-    monkeypatch.setattr(automation, "answer_question_via_chatgpt", wrapped)
-    monkeypatch.setattr("quiz_automation.runner.answer_question_via_chatgpt", wrapped)
+    monkeypatch.setattr(automation, "answer_question", wrapped)
+    monkeypatch.setattr("quiz_automation.runner.answer_question", wrapped)
 
     runner.start()
     runner.join(timeout=1)

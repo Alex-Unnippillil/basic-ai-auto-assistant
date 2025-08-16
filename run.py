@@ -56,8 +56,6 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
-    if args.temperature is not None and args.temperature < 0:
-        parser.error("--temperature must be non-negative")
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
@@ -114,9 +112,7 @@ def main(argv: list[str] | None = None) -> None:
             global_settings.temperature = args.temperature
         options = list("ABCD")
         stats = Stats()
-        model_client = (
-            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
-        )
+
 
         runner = QuizRunner(
             cfg.quiz_region,

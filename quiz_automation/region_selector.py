@@ -8,10 +8,10 @@ cannot be imported.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict
-import json
 
 from .types import Region
 from .utils import validate_region
@@ -38,6 +38,7 @@ class RegionSelector:
     _regions: Dict[str, Region] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        """Load existing regions from ``path`` if present."""
         if self.path.exists():
             try:
                 with self.path.open("r", encoding="utf8") as fh:
@@ -67,7 +68,6 @@ class RegionSelector:
         left and then the bottom right corner of the region.  The coordinates are
         measured using :func:`pyautogui.position`.
         """
-
         input("Move mouse to top left and press Enter")
         x1, y1 = pyautogui.position()
         input("Move mouse to bottom right and press Enter")
@@ -96,6 +96,4 @@ class RegionSelector:
         KeyError
             If the region ``name`` has not been saved yet.
         """
-
         return self._regions[name]
-

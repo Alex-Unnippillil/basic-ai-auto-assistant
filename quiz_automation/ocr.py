@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """OCR backends used by the quiz watcher."""
+
+from __future__ import annotations
 
 from importlib import import_module
 from typing import Any, Callable, Dict, Protocol
@@ -10,6 +10,7 @@ class OCRBackend(Protocol):
     """Simple callable protocol for OCR backends."""
 
     def __call__(self, img) -> str:  # pragma: no cover - behaviour depends on backend
+        """Return recognized text for *img*."""
         ...
 
 
@@ -22,9 +23,11 @@ class PytesseractOCR:
     """
 
     def __init__(self, lang: str | None = None) -> None:
+        """Initialize the backend with optional language code."""
         self.lang = lang
 
     def __call__(self, img) -> str:  # pragma: no cover - requires optional deps
+        """Return recognized text from *img* using :mod:`pytesseract`."""
         try:
             import pytesseract  # type: ignore
             from PIL import Image  # type: ignore
@@ -46,13 +49,14 @@ class PytesseractOCR:
 _BACKENDS: Dict[str, Callable[..., OCRBackend]] = {"pytesseract": PytesseractOCR}
 
 
-def register_backend(name: str, backend: Callable[..., OCRBackend] | type[OCRBackend]) -> None:
+def register_backend(
+    name: str, backend: Callable[..., OCRBackend] | type[OCRBackend]
+) -> None:
     """Register *backend* under *name*.
 
     ``backend`` may be a class implementing :class:`OCRBackend` or a callable
     returning such an object.
     """
-
     _BACKENDS[name] = backend  # type: ignore[assignment]
 
 
@@ -64,7 +68,6 @@ def get_backend(name: str | None = None, **kwargs: Any) -> OCRBackend:
     Otherwise *name* is treated as an import path of the form
     ``'module:qualname'`` or ``'module.qualname'`` and imported dynamically.
     """
-
     target = name or "pytesseract"
     factory = _BACKENDS.get(target)
     if factory is not None:

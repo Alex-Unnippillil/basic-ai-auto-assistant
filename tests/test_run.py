@@ -7,20 +7,23 @@ reached.
 """
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 
-
-@pytest.mark.parametrize("backend, client_attr", [
-    ("chatgpt", "ChatGPTClient"),
-    ("local", "LocalModelClient"),
-])
+@pytest.mark.parametrize(
+    "backend, client_attr",
+    [
+        ("chatgpt", "ChatGPTClient"),
+        ("local", "LocalModelClient"),
+    ],
+)
 def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> None:
     """Simulate CLI invocation and ensure the runner is configured correctly."""
 
-    import importlib, sys
+    import importlib
+    import sys
 
     # Provide lightweight stand-ins for optional dependencies
     sys.modules.setdefault(
@@ -36,20 +39,21 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
         SimpleNamespace(BaseSettings=object, SettingsConfigDict=dict),
     )
 
-    run = importlib.import_module("run")
+    _run = importlib.import_module("run")
     from quiz_automation.types import Point, Region
 
     # Dummy configuration and stats objects returned by patched factories
-    cfg = SimpleNamespace(
+    _cfg = SimpleNamespace(
         quiz_region=Region(1, 2, 3, 4),
         chat_box=Point(5, 6),
         response_region=Region(7, 8, 9, 10),
-      option_base=Point(11, 12),
+        option_base=Point(11, 12),
     )
 
 
 def test_cli_temperature(monkeypatch) -> None:
-    import importlib, sys
+    import importlib
+    import sys
 
     sys.modules.setdefault(
         "pydantic",
@@ -65,8 +69,8 @@ def test_cli_temperature(monkeypatch) -> None:
     )
 
     run = importlib.import_module("run")
-    from quiz_automation.types import Point, Region
     from quiz_automation.config import settings as global_settings
+    from quiz_automation.types import Point, Region
 
     cfg = SimpleNamespace(
         quiz_region=Region(1, 2, 3, 4),

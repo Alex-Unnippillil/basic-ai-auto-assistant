@@ -1,4 +1,5 @@
-"""Minimal OpenAI client wrapper with retry logic."""
+"""Client for interacting with the OpenAI ChatGPT API."""
+
 from __future__ import annotations
 
 import time
@@ -7,12 +8,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, ValidationError
 
 try:  # pragma: no cover - optional dependency
-    from openai import (
-        APITimeoutError,
-        APIConnectionError,
-        RateLimitError,
-        OpenAI,
-    )
+    from openai import APIConnectionError, APITimeoutError, OpenAI, RateLimitError
 except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
     APITimeoutError = APIConnectionError = RateLimitError = ()  # type: ignore
@@ -26,8 +22,15 @@ class QuizAnswer(BaseModel):
 
     answer: Literal["A", "B", "C", "D"]
 
+
 if isinstance(APITimeoutError, type):
-    TRANSIENT_ERRORS = (APITimeoutError, APIConnectionError, RateLimitError, TimeoutError, ConnectionError)
+    TRANSIENT_ERRORS = (
+        APITimeoutError,
+        APIConnectionError,
+        RateLimitError,
+        TimeoutError,
+        ConnectionError,
+    )
 else:  # pragma: no cover - openai not installed
     TRANSIENT_ERRORS = (TimeoutError, ConnectionError)
 
@@ -36,6 +39,7 @@ class ChatGPTClient(ModelClientProtocol):
     """Wrapper around the OpenAI SDK that returns a single-letter answer."""
 
     def __init__(self, api_key: Optional[str] = None) -> None:
+        """Create a client using ``api_key`` or configured settings."""
         if OpenAI is None:  # pragma: no cover
             raise RuntimeError("openai package not available")
         self.client = OpenAI(api_key=api_key or settings.openai_api_key)
@@ -71,9 +75,7 @@ class ChatGPTClient(ModelClientProtocol):
 
     def ask(self, question: str, options: List[str], retries: int = 3) -> str:
         """Return the model's single-letter answer with basic retries."""
-        opts = "\n".join(
-            f"{chr(ord('A') + i)}. {opt}" for i, opt in enumerate(options)
-        )
+        opts = "\n".join(f"{chr(ord('A') + i)}. {opt}" for i, opt in enumerate(options))
         prompt = f"{question}\n{opts}" if opts else question
 
         for attempt in range(1, retries + 1):

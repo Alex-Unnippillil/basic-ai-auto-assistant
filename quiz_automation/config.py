@@ -1,9 +1,9 @@
-from __future__ import annotations
-
 """Configuration handling for the quiz automation package."""
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from __future__ import annotations
+
 from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .types import Point, Region
 
@@ -38,7 +38,6 @@ class Settings(BaseSettings):
         if v < 0:
             raise ValueError("temperature must be non-negative")
         return v
-
 
 
 # A module-level settings instance convenient for components that do not need

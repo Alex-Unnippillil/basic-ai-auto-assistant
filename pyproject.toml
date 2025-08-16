@@ -40,3 +40,6 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "quiz_automation.utils"
 ignore_errors = false
+
+[tool.pydocstyle]
+convention = "pep257"

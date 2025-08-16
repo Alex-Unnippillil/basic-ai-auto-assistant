@@ -1,4 +1,5 @@
 """Thread that repeatedly answers quiz questions via the ChatGPT UI."""
+
 from __future__ import annotations
 
 import queue
@@ -8,10 +9,10 @@ from typing import Sequence
 
 from . import automation
 from .automation import answer_question
-from .model_client import ModelClientProtocol
-from .stats import Stats
 from .gui import QuizGUI
 from .logger import get_logger
+from .model_client import ModelClientProtocol
+from .stats import Stats
 from .types import Point, Region
 
 logger = get_logger(__name__)
@@ -33,6 +34,7 @@ class QuizRunner(threading.Thread):
         gui: QuizGUI | None = None,
         poll_interval: float = 0.5,
     ) -> None:
+        """Initialise the runner thread."""
         super().__init__(daemon=True)
         self.quiz_region = quiz_region
         self.chatgpt_box = chatgpt_box
@@ -52,6 +54,7 @@ class QuizRunner(threading.Thread):
     # The behaviour of this method is tested indirectly via unit tests that
     # patch :func:`answer_question`, so it is excluded from coverage
     def run(self) -> None:  # pragma: no cover
+        """Run the capture and worker threads until stopped."""
         q: queue.Queue = queue.Queue(maxsize=1)
 
         def capture() -> None:

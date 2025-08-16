@@ -1,3 +1,5 @@
+"""Utility helpers for package logging configuration."""
+
 import inspect
 import logging
 from typing import Optional
@@ -5,7 +7,9 @@ from typing import Optional
 DEFAULT_FORMAT = "%(levelname)s:%(name)s:%(message)s"
 
 
-def configure_logger(level: int = logging.INFO, fmt: str = DEFAULT_FORMAT) -> logging.Logger:
+def configure_logger(
+    level: int = logging.INFO, fmt: str = DEFAULT_FORMAT
+) -> logging.Logger:
     """Configure and return the root logger for the package.
 
     Parameters

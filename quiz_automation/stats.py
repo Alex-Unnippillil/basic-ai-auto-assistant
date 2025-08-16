@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from threading import Lock
 
 
+
 @dataclass
 class Stats:
     """Container tracking per-question metrics.
@@ -24,32 +25,22 @@ class Stats:
 
     def record(self, duration: float, tokens: int) -> None:
         """Record timing and token usage for a successful question."""
-
         with self._lock:
             self.questions_answered += 1
-            self.total_time += duration
-            self.total_tokens += tokens
+
 
     def record_error(self) -> None:
         """Increment the error counter."""
-
         with self._lock:
             self.errors += 1
 
     @property
     def average_time(self) -> float:
         """Return the average time taken per question."""
-
         with self._lock:
-            if self.questions_answered == 0:
-                return 0.0
-            return self.total_time / self.questions_answered
+
 
     @property
     def average_tokens(self) -> float:
         """Return the average tokens used per question."""
-
         with self._lock:
-            if self.questions_answered == 0:
-                return 0.0
-            return self.total_tokens / self.questions_answered

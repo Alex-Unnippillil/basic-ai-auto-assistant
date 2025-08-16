@@ -10,6 +10,7 @@ class OCRBackend(Protocol):
     """Simple callable protocol for OCR backends."""
 
     def __call__(self, img) -> str:  # pragma: no cover - behaviour depends on backend
+        """Return recognized text for *img*."""
         ...
 
 
@@ -22,9 +23,11 @@ class PytesseractOCR:
     """
 
     def __init__(self, lang: str | None = None) -> None:
+        """Initialize the backend with optional language code."""
         self.lang = lang
 
     def __call__(self, img) -> str:  # pragma: no cover - requires optional deps
+        """Return recognized text from *img* using :mod:`pytesseract`."""
         try:
             import pytesseract  # type: ignore
             from PIL import Image  # type: ignore
@@ -54,7 +57,6 @@ def register_backend(
     ``backend`` may be a class implementing :class:`OCRBackend` or a callable
     returning such an object.
     """
-
     _BACKENDS[name] = backend  # type: ignore[assignment]
 
 
@@ -66,7 +68,6 @@ def get_backend(name: str | None = None, **kwargs: Any) -> OCRBackend:
     Otherwise *name* is treated as an import path of the form
     ``'module:qualname'`` or ``'module.qualname'`` and imported dynamically.
     """
-
     target = name or "pytesseract"
     factory = _BACKENDS.get(target)
     if factory is not None:

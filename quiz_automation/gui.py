@@ -16,11 +16,12 @@ class QuizGUI:
     """Display :class:`Stats` in a lightweight window.
 
     The widget is intentionally tiny so that unit tests can instantiate it
-    without starting a full GUI environment.  When PySide6 is not available, the
+    without starting a full GUI environment. When PySide6 is not available, the
     class still stores the last rendered text for inspection by tests.
     """
 
     def __init__(self) -> None:
+        """Create the GUI window and underlying Qt widgets."""
         self._app: Optional[QApplication]
         self._label: Optional[QLabel]
         self._last_text: str = ""
@@ -40,7 +41,6 @@ class QuizGUI:
 
     def update(self, stats: Stats) -> None:
         """Refresh the GUI with the latest *stats*."""
-
         text = (
             f"Questions: {stats.questions_answered} | "
             f"Avg Time: {stats.average_time:.2f}s | "
@@ -59,5 +59,4 @@ class QuizGUI:
     @property
     def last_text(self) -> str:
         """Return the most recently rendered text."""
-
         return self._last_text

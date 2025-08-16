@@ -75,8 +75,11 @@ def get_backend(name: str | None = None, **kwargs: Any) -> OCRBackend:
     module_name, sep, qualname = target.replace(":", ".").rpartition(".")
     if not sep:
         raise RuntimeError(f"Unknown OCR backend '{target}'")
-    module = import_module(module_name)
-    obj = getattr(module, qualname)
+    try:
+        module = import_module(module_name)
+        obj = getattr(module, qualname)
+    except Exception as exc:
+        raise RuntimeError(f"Could not load OCR backend '{target}'") from exc
     if isinstance(obj, type):
         return obj(**kwargs)  # type: ignore[misc]
     if callable(obj):

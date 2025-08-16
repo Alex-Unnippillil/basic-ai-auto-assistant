@@ -122,6 +122,9 @@ The window updates with question count, average response time, tokens, and error
 * **No responses from OpenAI** – verify `OPENAI_API_KEY` and `OPENAI_MODEL` are set and that the machine has network access.
 * **Environment variables ignored** – pass `--config` with the path to your `.env` file or export the variables before running the CLI.
 
+## Changelog
+See [CHANGELOG.md](CHANGELOG.md) for a list of notable changes. Update this file with details for each new release.
+
 ## Tests
 Run the test suite with coverage:
 ```bash

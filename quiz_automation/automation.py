@@ -68,7 +68,6 @@ def send_to_chatgpt(img: Any, box: Point) -> None:
     RuntimeError
         If :mod:`pyautogui` is not available.
     """
-
     if not hasattr(pyautogui, "moveTo"):
         raise RuntimeError("pyautogui not available")
 
@@ -107,7 +106,6 @@ def read_chatgpt_response(
     TimeoutError
         If no non-empty text is detected within ``timeout`` seconds.
     """
-
     if not hasattr(pyautogui, "screenshot") or not hasattr(
         pytesseract, "image_to_string"
     ):
@@ -138,7 +136,6 @@ def click_option(base: Point, index: int, offset: int = 40) -> None:
     RuntimeError
         If :mod:`pyautogui` is not available.
     """
-
     Clicker(base, offset).click_option(index)
 
 
@@ -159,7 +156,6 @@ def answer_question(
     provided the image is OCR'd using the configured backend and the resulting
     question and option text are forwarded to ``client.ask``.
     """
-
     start = time.time()
     if client is None:
         send_to_chatgpt(quiz_image, chatgpt_box)

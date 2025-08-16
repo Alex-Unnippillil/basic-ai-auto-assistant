@@ -36,6 +36,7 @@ class Watcher(threading.Thread):
         cfg: Settings,
         ocr: OCRBackend | None = None,
     ) -> None:
+        """Initialize the watcher thread."""
         super().__init__(daemon=True)
         self.region = region
         self.queue = queue
@@ -47,6 +48,7 @@ class Watcher(threading.Thread):
 
     # -- basic helpers -------------------------------------------------
     def capture(self):
+        """Capture the configured screen region."""
         try:
             mss_module = _mss()
         except Exception as exc:
@@ -55,9 +57,11 @@ class Watcher(threading.Thread):
         return mss_module.mss().grab(self.region.as_tuple())
 
     def ocr(self, img) -> str:  # pragma: no cover - behaviour provided by backend
+        """Return OCR text for *img* using the configured backend."""
         return self.ocr_backend(img)
 
     def is_new_question(self, text: str) -> bool:
+        """Return ``True`` if *text* differs from the previous question."""
         current = hash_text(text)
         if current != self._last_hash:
             self._last_hash = current
@@ -66,16 +70,20 @@ class Watcher(threading.Thread):
 
     # -- thread control ------------------------------------------------
     def stop(self) -> None:
+        """Signal the watcher thread to stop."""
         self.stop_flag.set()
 
     def pause(self) -> None:
+        """Pause screen polling."""
         self.pause_flag.set()
 
     def resume(self) -> None:
+        """Resume screen polling."""
         self.pause_flag.clear()
 
     # -- main loop -----------------------------------------------------
     def run(self) -> None:  # pragma: no cover - behaviour exercised in tests
+        """Run the watcher loop until stopped."""
         while not self.stop_flag.is_set():
             if self.pause_flag.is_set():
                 time.sleep(self.cfg.poll_interval)

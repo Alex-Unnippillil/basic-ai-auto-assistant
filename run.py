@@ -61,11 +61,46 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.mode == "gui":
         gui = QuizGUI()
+        cfg = Settings(_env_file=args.config) if args.config else Settings()
+        if args.temperature is not None:
+            cfg.temperature = args.temperature
+            global_settings.temperature = args.temperature
+        options = list("ABCD")
+        stats = Stats()
+        model_client = (
+            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
+        )
+        runner = QuizRunner(
+            cfg.quiz_region,
+            cfg.chat_box,
+            cfg.response_region,
+            options,
+            cfg.option_base,
+            gui=gui,
+            model_client=model_client,
+            stats=stats,
+        )
+        runner.start()
         app = getattr(gui, "_app", None)
-        if app is not None:
-            app.exec()
-        else:
-            print("PySide6 is not available; running without GUI.")
+        try:
+            if app is not None:
+                app.exec()
+            else:
+                print("PySide6 is not available; running without GUI.")
+                while True:
+                    runner.join(timeout=1)
+                    if not runner.is_alive():
+                        break
+                    if (
+                        args.max_questions is not None
+                        and stats.questions_answered >= args.max_questions
+                    ):
+                        runner.stop()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            runner.stop()
+            runner.join()
     else:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         if args.temperature is not None:

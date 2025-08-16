@@ -56,6 +56,9 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    if args.temperature is not None and args.temperature < 0:
+        parser.error("--temperature must be non-negative")
+
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
 
@@ -67,7 +70,10 @@ def main(argv: list[str] | None = None) -> None:
         else:
             print("PySide6 is not available; running without GUI.")
     else:
-        cfg = Settings(_env_file=args.config) if args.config else Settings()
+        cfg_kwargs = {"_env_file": args.config} if args.config else {}
+        if args.temperature is not None:
+            cfg_kwargs["temperature"] = args.temperature
+        cfg = Settings(**cfg_kwargs)
         if args.temperature is not None:
             cfg.temperature = args.temperature
             global_settings.temperature = args.temperature

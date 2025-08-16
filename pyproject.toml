@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "basic-ai-auto-assistant"
 version = "0.1.0"
 description = "Automation helpers for multiple-choice quizzes."
+license = {text = "MIT"}
 classifiers = [
     "Programming Language :: Python :: 3",
 ]

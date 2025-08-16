@@ -39,33 +39,28 @@ class Clicker:
         offset:
             Vertical distance in pixels between successive options.
         """
-
         self.base = base
         self.offset = offset
 
     def move(self, x: int, y: int) -> None:
         """Move the mouse cursor to ``(x, y)``."""
-
         if not hasattr(pyautogui, "moveTo"):
             raise RuntimeError("pyautogui not available")
         pyautogui.moveTo(x, y)
 
     def click(self) -> None:
         """Perform a mouse click at the current cursor location."""
-
         if not hasattr(pyautogui, "click"):
             raise RuntimeError("pyautogui not available")
         pyautogui.click()
 
     def click_at(self, x: int, y: int) -> None:
         """Move the mouse to ``(x, y)`` and click."""
-
         self.move(x, y)
         self.click()
 
     def click_option(self, index: int) -> None:
         """Click the option at ``index`` relative to ``base`` and ``offset``."""
-
         x, y = self.base
         self.click_at(x, y + index * self.offset)
 
@@ -74,19 +69,15 @@ _default_clicker = Clicker()
 
 
 def move_to(x: int, y: int) -> None:
-    """Module level convenience wrapper for :class:`Clicker.move`."""
-
+    """Move the mouse via the default :class:`Clicker`."""
     _default_clicker.move(x, y)
 
 
 def click() -> None:
-    """Module level convenience wrapper for :class:`Clicker.click`."""
-
+    """Click using the default :class:`Clicker`."""
     _default_clicker.click()
 
 
 def click_at(x: int, y: int) -> None:
     """Move to ``(x, y)`` and click using the default :class:`Clicker`."""
-
     _default_clicker.click_at(x, y)
-

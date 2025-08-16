@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Runtime statistics for quiz automation."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from threading import Lock
@@ -25,26 +25,22 @@ class Stats:
 
     def record(self, duration: float, tokens: int) -> None:
         """Record timing and token usage for a successful question."""
-
         with self._lock:
             self.questions_answered += 1
 
 
     def record_error(self) -> None:
         """Increment the error counter."""
-
         with self._lock:
             self.errors += 1
 
     @property
     def average_time(self) -> float:
         """Return the average time taken per question."""
-
         with self._lock:
 
 
     @property
     def average_tokens(self) -> float:
         """Return the average tokens used per question."""
-
         with self._lock:

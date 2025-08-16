@@ -1,4 +1,5 @@
 """Computer vision helpers for locating quiz UI elements."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -30,6 +31,7 @@ class AdvancedUIDetector:
     """
 
     def __init__(self, template_path: str | None = None) -> None:
+        """Initialise the detector, optionally loading a template image."""
         self.template_path = template_path
         self.template = None
         if template_path and cv2 is not None:
@@ -45,7 +47,6 @@ class AdvancedUIDetector:
         analysis.  Here we simply return an empty list when OpenCV is missing or
         when no template is supplied.
         """
-
         if cv2 is None or self.template is None:
             return []
         result = cv2.matchTemplate(frame, self.template, cv2.TM_CCOEFF_NORMED)
@@ -62,6 +63,7 @@ class LayoutAnalyzer:
 
     @staticmethod
     def score_layout(elements: List[UIElement]) -> float:
+        """Return the average confidence score for *elements*."""
         if not elements:
             return 0.0
         return sum(e.confidence for e in elements) / len(elements)

@@ -1,4 +1,5 @@
 """Miscellaneous helper functions."""
+
 from __future__ import annotations
 
 import base64
@@ -12,7 +13,6 @@ from typing import Any, Iterator
 
 from .types import Region
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +23,6 @@ def hash_text(text: str) -> str:
 
 def validate_region(region: Region) -> None:
     """Ensure *region* has positive width and height."""
-
     _left, _top, width, height = region
     if width <= 0 or height <= 0:
         raise ValueError("Region width and height must be positive")
@@ -90,7 +89,6 @@ def copy_image_to_clipboard(img: Any) -> bool:
     enabling real image pasting on supported platforms. ``True`` is returned on
     success and ``False`` if all strategies fail.
     """
-
     last_exc: Exception | None = None
 
     if sys.platform.startswith("win"):

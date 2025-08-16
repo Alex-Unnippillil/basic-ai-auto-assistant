@@ -1,4 +1,5 @@
 """Model client protocol and simple local implementation."""
+
 from __future__ import annotations
 
 import re
@@ -17,6 +18,7 @@ class LocalModelClient:
     """Pick the option sharing the most words with the question."""
 
     def ask(self, question: str, options: List[str]) -> str:
+        """Return the letter of the option most related to the question."""
         question_words = Counter(re.findall(r"\w+", question.lower()))
         scores: List[int] = []
         for opt in options:

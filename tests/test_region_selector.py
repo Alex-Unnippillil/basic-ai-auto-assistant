@@ -1,4 +1,7 @@
 import pytest
+
+pytest.importorskip("pydantic_settings")
+
 import quiz_automation.region_selector as rs_mod
 from quiz_automation.types import Region
 
@@ -30,3 +33,15 @@ def test_region_selector_corrupted_file(tmp_path, content):
     selector = rs_mod.RegionSelector(path)
     with pytest.raises(KeyError):
         selector.load("quiz")
+
+
+def test_region_selector_invalid_region(tmp_path, monkeypatch):
+    path = tmp_path / "coords.json"
+    selector = rs_mod.RegionSelector(path)
+    positions = iter([(5, 5), (1, 1)])
+    monkeypatch.setattr("builtins.input", lambda prompt="": None)
+    monkeypatch.setattr(rs_mod.pyautogui, "position", lambda: next(positions))
+    with pytest.raises(ValueError):
+        selector.select("quiz")
+    assert "quiz" not in selector._regions
+    assert not path.exists()

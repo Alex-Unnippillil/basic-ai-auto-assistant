@@ -1,5 +1,8 @@
 import types
-import numpy as np
+import pytest
+
+pytest.importorskip("pydantic_settings")
+np = pytest.importorskip("numpy")
 
 from quiz_automation.cv_expert import AdvancedUIDetector, LayoutAnalyzer, UIElement
 

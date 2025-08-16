@@ -8,7 +8,7 @@ import io
 import logging
 import subprocess
 import sys
-from typing import Any
+from typing import Any, Iterator
 
 from .types import Region
 
@@ -30,7 +30,7 @@ def validate_region(region: Region) -> None:
 
 
 @contextlib.contextmanager
-def _open_win_clipboard(win32clipboard):
+def _open_win_clipboard(win32clipboard: Any) -> Iterator[Any]:
     """Context manager that opens and closes the Windows clipboard."""
     win32clipboard.OpenClipboard()
     try:
@@ -40,7 +40,7 @@ def _open_win_clipboard(win32clipboard):
 
 
 def _copy_windows(img: Any) -> bool:
-    import win32clipboard  # type: ignore  # pragma: no cover - Windows only
+    import win32clipboard  # pragma: no cover - Windows only
 
     output = io.BytesIO()
     img.convert("RGB").save(output, "BMP")
@@ -52,7 +52,7 @@ def _copy_windows(img: Any) -> bool:
 
 
 def _copy_macos(img: Any) -> bool:
-    with subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, close_fds=True) as proc:  # type: ignore[call-arg]
+    with subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, close_fds=True) as proc:
         stdin = proc.stdin
         assert stdin is not None
         with stdin:
@@ -65,7 +65,7 @@ def _copy_linux(img: Any) -> bool:
         ["xclip", "-selection", "clipboard", "-t", "image/png"],
         stdin=subprocess.PIPE,
         close_fds=True,
-    ) as proc:  # type: ignore[call-arg]
+    ) as proc:
         stdin = proc.stdin
         assert stdin is not None
         with stdin:
@@ -74,7 +74,7 @@ def _copy_linux(img: Any) -> bool:
 
 
 def _copy_fallback(img: Any) -> bool:
-    import pyperclip  # type: ignore  # pragma: no cover - third-party utility
+    import pyperclip  # pragma: no cover - third-party utility
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")

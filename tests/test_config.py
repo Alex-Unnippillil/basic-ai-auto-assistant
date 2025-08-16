@@ -1,4 +1,9 @@
+import pytest
+
+pytest.importorskip("pydantic_settings")
+
 from quiz_automation.config import Settings
+from pydantic import ValidationError
 from quiz_automation.types import Region
 
 
@@ -32,4 +37,15 @@ def test_screen_region_env(monkeypatch):
     )
     cfg = Settings()
     assert cfg.quiz_region == Region(10, 20, 30, 40)
+
+
+def test_poll_interval_validator() -> None:
+    with pytest.raises(ValidationError):
+        Settings(poll_interval=0)
+
+
+def test_temperature_validator() -> None:
+    with pytest.raises(ValidationError):
+        Settings(temperature=-0.1)
+    assert Settings(temperature=0.5).temperature == 0.5
 

@@ -6,9 +6,10 @@ import logging
 
 from quiz_automation import QuizGUI
 from quiz_automation.runner import QuizRunner
-from quiz_automation.config import Settings
+from quiz_automation.config import Settings, settings as global_settings
 from quiz_automation.logger import configure_logger
-
+from quiz_automation.chatgpt_client import ChatGPTClient
+from quiz_automation.model_client import LocalModelClient
 from quiz_automation.stats import Stats
 
 
@@ -48,27 +49,70 @@ def main(argv: list[str] | None = None) -> None:
         default="chatgpt",
         help="Model backend to use for answering questions",
     )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        help="Sampling temperature for the ChatGPT model",
+    )
     args = parser.parse_args(argv)
 
-    from quiz_automation.chatgpt_client import ChatGPTClient
-    from quiz_automation.model_client import LocalModelClient
-
-    model_client = ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
 
     if args.mode == "gui":
         gui = QuizGUI()
-        app = getattr(gui, "_app", None)
-        if app is not None:
-            app.exec()
-        else:
-            print("PySide6 is not available; running without GUI.")
-    else:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
+        if args.temperature is not None:
+            cfg.temperature = args.temperature
+            global_settings.temperature = args.temperature
         options = list("ABCD")
         stats = Stats()
+        model_client = (
+            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
+        )
+        runner = QuizRunner(
+            cfg.quiz_region,
+            cfg.chat_box,
+            cfg.response_region,
+            options,
+            cfg.option_base,
+            gui=gui,
+            model_client=model_client,
+            stats=stats,
+        )
+        runner.start()
+        app = getattr(gui, "_app", None)
+        try:
+            if app is not None:
+                app.exec()
+            else:
+                print("PySide6 is not available; running without GUI.")
+                while True:
+                    runner.join(timeout=1)
+                    if not runner.is_alive():
+                        break
+                    if (
+                        args.max_questions is not None
+                        and stats.questions_answered >= args.max_questions
+                    ):
+                        runner.stop()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            runner.stop()
+            runner.join()
+    else:
+        cfg_kwargs = {"_env_file": args.config} if args.config else {}
+        if args.temperature is not None:
+            cfg_kwargs["temperature"] = args.temperature
+        cfg = Settings(**cfg_kwargs)
+        if args.temperature is not None:
+            cfg.temperature = args.temperature
+            global_settings.temperature = args.temperature
+        options = list("ABCD")
+        stats = Stats()
+
 
         runner = QuizRunner(
             cfg.quiz_region,

@@ -123,10 +123,18 @@ The window updates with question count, average response time, tokens, and error
 * **Environment variables ignored** – pass `--config` with the path to your `.env` file or export the variables before running the CLI.
 
 ## Tests
-Run the test suite with:
+Run the test suite with coverage:
 ```bash
-pytest
+pytest --cov=quiz_automation
 ```
+The CI workflow emits `coverage.xml`, which can be uploaded to a service like [Codecov](https://about.codecov.io/) or [Coveralls](https://coveralls.io/) for a coverage badge. After enabling a service, add its badge to the top of the README, for example with Codecov:
+
+```markdown
+[![codecov](https://codecov.io/gh/OWNER/basic-ai-auto-assistant/branch/main/graph/badge.svg)](https://codecov.io/gh/OWNER/basic-ai-auto-assistant)
+```
+
+Replace `OWNER` with your GitHub username.
+
 Some tests rely on optional packages such as `numpy` and will be skipped when
 those dependencies are missing. Install the extras for full coverage:
 

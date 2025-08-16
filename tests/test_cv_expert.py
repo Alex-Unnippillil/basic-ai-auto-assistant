@@ -9,6 +9,7 @@ np = pytest.importorskip("numpy")
 
 
 
+
 def test_detector_returns_empty_without_template(monkeypatch):
     detector = AdvancedUIDetector()
     assert detector.detect_elements(None) == []

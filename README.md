@@ -144,3 +144,17 @@ those dependencies are missing. Install the extras for full coverage:
 ```bash
 pip install -e .[full]
 ```
+
+## Docker
+
+Build the image:
+
+```bash
+docker build -t basic-ai-auto-assistant .
+```
+
+Run the container:
+
+```bash
+docker run --rm basic-ai-auto-assistant
+```

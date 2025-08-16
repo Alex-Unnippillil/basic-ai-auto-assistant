@@ -50,6 +50,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    from quiz_automation.chatgpt_client import ChatGPTClient
+    from quiz_automation.model_client import LocalModelClient
+
+    model_client = ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
+
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
 
@@ -65,7 +70,6 @@ def main(argv: list[str] | None = None) -> None:
         options = list("ABCD")
         stats = Stats()
 
-
         runner = QuizRunner(
             cfg.quiz_region,
             cfg.chat_box,
@@ -73,6 +77,7 @@ def main(argv: list[str] | None = None) -> None:
             options,
             cfg.option_base,
 
+            model_client=model_client,
             stats=stats,
         )
         runner.start()

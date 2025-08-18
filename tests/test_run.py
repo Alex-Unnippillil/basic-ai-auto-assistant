@@ -76,7 +76,76 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
         ])
 
     assert instantiated.get("created", False)
-    assert Runner.return_value.stop.call_count == 1
+    assert Runner.return_value.stop.call_count == 2
+
+
+@pytest.mark.parametrize("spec", ["dummy_backend:DummyClient", "dummy_backend.DummyClient"])
+def test_cli_backend_import_path(spec: str) -> None:
+    """Ensure custom backend classes can be imported via path."""
+
+    import importlib
+    import sys
+    import types
+
+    sys.modules.setdefault(
+        "pydantic",
+        SimpleNamespace(
+            BaseModel=object,
+            ValidationError=Exception,
+            field_validator=lambda *a, **k: (lambda f: f),
+        ),
+    )
+    sys.modules.setdefault(
+        "pydantic_settings",
+        SimpleNamespace(BaseSettings=object, SettingsConfigDict=dict),
+    )
+
+    run = importlib.import_module("run")
+    from quiz_automation.types import Point, Region
+
+    _cfg = SimpleNamespace(
+        quiz_region=Region(1, 2, 3, 4),
+        chat_box=Point(5, 6),
+        response_region=Region(7, 8, 9, 10),
+        option_base=Point(11, 12),
+    )
+    stats = SimpleNamespace(questions_answered=0)
+    instantiated = {}
+
+    dummy_module = types.ModuleType("dummy_backend")
+
+    class DummyClient:
+        def __init__(self, *a, **k):
+            instantiated["created"] = True
+
+        def ask(self, question: str, options: list[str]) -> str:  # pragma: no cover - trivial
+            return "A"
+
+    dummy_module.DummyClient = DummyClient
+    sys.modules["dummy_backend"] = dummy_module
+
+    with patch.object(run, "Settings", return_value=_cfg), patch.object(
+        run, "Stats", return_value=stats
+    ), patch.object(run, "QuizRunner") as Runner:
+        Runner.return_value.is_alive.side_effect = [True, False]
+        Runner.return_value.start.return_value = None
+        Runner.return_value.join.return_value = None
+        Runner.return_value.stop.return_value = None
+
+        run.main([
+            "--mode",
+            "headless",
+            "--backend",
+            spec,
+            "--max-questions",
+            "0",
+        ])
+
+    assert instantiated.get("created", False)
+    assert Runner.return_value.stop.call_count == 2
+    del sys.modules["dummy_backend"]
+
+
 def test_cli_temperature(monkeypatch) -> None:
     import importlib
     import sys

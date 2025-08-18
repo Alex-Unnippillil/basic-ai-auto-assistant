@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import List, Protocol
+from importlib import import_module
+from typing import List, Protocol, runtime_checkable
 
 
+@runtime_checkable
 class ModelClientProtocol(Protocol):
     """Minimal protocol for quiz model backends."""
 
@@ -26,3 +28,28 @@ class LocalModelClient:
             scores.append(sum((question_words & opt_words).values()))
         idx = max(range(len(options)), key=scores.__getitem__) if options else 0
         return chr(ord("A") + idx)
+
+
+def load_model_client(spec: str) -> ModelClientProtocol:
+    """Dynamically load a model client implementation.
+
+    Parameters
+    ----------
+    spec:
+        Import path in the form ``module:Class`` or ``module.Class``.
+
+    Returns
+    -------
+    ModelClientProtocol
+        An instantiated client object.
+    """
+    if ":" in spec:
+        module_name, class_name = spec.split(":", 1)
+    else:
+        module_name, class_name = spec.rsplit(".", 1)
+    module = import_module(module_name)
+    cls = getattr(module, class_name)
+    instance = cls()
+    if not isinstance(instance, ModelClientProtocol):
+        raise TypeError(f"{spec!r} does not implement ModelClientProtocol")
+    return instance

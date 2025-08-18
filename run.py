@@ -9,9 +9,21 @@ from quiz_automation.runner import QuizRunner
 from quiz_automation.config import Settings, settings as global_settings
 from quiz_automation.logger import configure_logger
 from quiz_automation.chatgpt_client import ChatGPTClient
-from quiz_automation.model_client import LocalModelClient
+from quiz_automation.model_client import (
+    LocalModelClient,
+    ModelClientProtocol,
+    load_model_client,
+)
 from quiz_automation.stats import Stats
 
+
+def create_model_client(name: str) -> ModelClientProtocol:
+    """Instantiate a model backend by name or import path."""
+    if name == "chatgpt":
+        return ChatGPTClient()
+    if name == "local":
+        return LocalModelClient()
+    return load_model_client(name)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -45,9 +57,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "--backend",
-        choices=["chatgpt", "local"],
         default="chatgpt",
-        help="Model backend to use for answering questions",
+        help=(
+            "Model backend to use for answering questions; "
+            "'chatgpt', 'local', or import path 'module:Class'"
+        ),
     )
     parser.add_argument(
         "--temperature",
@@ -68,9 +82,7 @@ def main(argv: list[str] | None = None) -> None:
             global_settings.temperature = args.temperature
         options = list("ABCD")
         stats = Stats()
-        model_client = (
-            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
-        )
+        model_client = create_model_client(args.backend)
         runner = QuizRunner(
             cfg.quiz_region,
             cfg.chat_box,
@@ -112,9 +124,7 @@ def main(argv: list[str] | None = None) -> None:
             global_settings.temperature = args.temperature
         options = list("ABCD")
         stats = Stats()
-        model_client = (
-            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
-        )
+        model_client = create_model_client(args.backend)
 
         runner = QuizRunner(
             cfg.quiz_region,

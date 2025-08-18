@@ -76,6 +76,7 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
         ])
 
     assert instantiated.get("created", False)
+    assert Runner.call_args.kwargs.get("max_questions") == 0
     assert Runner.return_value.stop.call_count == 1
 def test_cli_temperature(monkeypatch) -> None:
     import importlib
@@ -137,4 +138,5 @@ def test_cli_temperature(monkeypatch) -> None:
 
     assert captured.temp == 0.7
     assert cfg.temperature == 0.7
+    assert Runner.call_args.kwargs.get("max_questions") == 0
     global_settings.temperature = 0.0

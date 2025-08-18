@@ -112,7 +112,9 @@ def main(argv: list[str] | None = None) -> None:
             global_settings.temperature = args.temperature
         options = list("ABCD")
         stats = Stats()
-
+        model_client = (
+            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
+        )
 
         runner = QuizRunner(
             cfg.quiz_region,

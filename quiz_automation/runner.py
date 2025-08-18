@@ -5,7 +5,7 @@ from __future__ import annotations
 import queue
 import threading
 import time
-from typing import Sequence
+from typing import Sequence, TextIO
 
 from . import automation
 from .automation import answer_question
@@ -33,6 +33,7 @@ class QuizRunner(threading.Thread):
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
         poll_interval: float = 0.5,
+        session_log: TextIO | None = None,
     ) -> None:
         """Initialise the runner thread."""
         super().__init__(daemon=True)
@@ -46,6 +47,7 @@ class QuizRunner(threading.Thread):
         self.stats = stats or Stats()
         self.gui = gui
         self.poll_interval = poll_interval
+        self.session_log = session_log
 
     def stop(self) -> None:
         """Signal the runner to stop."""
@@ -81,6 +83,7 @@ class QuizRunner(threading.Thread):
                         stats=self.stats,
                         poll_interval=self.poll_interval,
                         client=self.model_client,
+                        session_log=self.session_log,
                     )
                 except Exception:
                     logger.exception("Error while answering question")

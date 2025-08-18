@@ -1,3 +1,4 @@
+import json
 import types
 import pytest
 
@@ -215,4 +216,50 @@ def test_answer_question_with_client(monkeypatch):
     assert letter == "C"
     assert clicks == [2]
     assert client.calls == [("What?", ["foo", "bar", "baz"])]
+
+
+def test_answer_question_session_log(monkeypatch, tmp_path):
+    """Providing ``session_log`` records JSON entries."""
+
+    log_file = tmp_path / "log.jsonl"
+
+    monkeypatch.setattr(automation, "send_to_chatgpt", lambda img, box: None)
+    monkeypatch.setattr(
+        automation,
+        "read_chatgpt_response",
+        lambda region, timeout=20.0, poll_interval=0.5: "Answer C",
+    )
+    monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: None)
+
+    def fake_backend(name):
+        assert name is None
+
+        def backend(img):
+            return "Question?\nA foo\nB bar\nC baz"
+
+        return backend
+
+    monkeypatch.setattr(automation.ocr, "get_backend", fake_backend)
+    times = iter([0, 1])
+    monkeypatch.setattr(
+        automation,
+        "time",
+        types.SimpleNamespace(time=lambda: next(times), sleep=lambda s: None),
+    )
+
+    with log_file.open("a", encoding="utf-8") as fh:
+        letter = automation.answer_question(
+            "img",
+            Point(0, 0),
+            Region(0, 0, 1, 1),
+            ["A", "B", "C"],
+            Point(0, 0),
+            session_log=fh,
+        )
+
+    assert letter == "C"
+    data = [json.loads(line) for line in log_file.read_text().splitlines()]
+    assert data[0]["letter"] == "C"
+    assert data[0]["options"] == ["foo", "bar", "baz"]
+    assert data[0]["tokens"] == 2
 

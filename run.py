@@ -54,11 +54,21 @@ def main(argv: list[str] | None = None) -> None:
         type=float,
         help="Sampling temperature for the ChatGPT model",
     )
+    parser.add_argument(
+        "--session-log",
+        help="Path to a JSONL file for per-question session records",
+    )
     args = parser.parse_args(argv)
 
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
+
+    log_file = (
+        open(args.session_log, "a", encoding="utf-8")
+        if args.session_log
+        else None
+    )
 
     if args.mode == "gui":
         gui = QuizGUI()
@@ -80,6 +90,7 @@ def main(argv: list[str] | None = None) -> None:
             gui=gui,
             model_client=model_client,
             stats=stats,
+            session_log=log_file,
         )
         runner.start()
         app = getattr(gui, "_app", None)
@@ -96,12 +107,14 @@ def main(argv: list[str] | None = None) -> None:
                         args.max_questions is not None
                         and stats.questions_answered >= args.max_questions
                     ):
-                        runner.stop()
+                        break
         except KeyboardInterrupt:
             pass
         finally:
             runner.stop()
             runner.join()
+            if log_file:
+                log_file.close()
     else:
         cfg_kwargs = {"_env_file": args.config} if args.config else {}
         if args.temperature is not None:
@@ -125,6 +138,7 @@ def main(argv: list[str] | None = None) -> None:
 
             model_client=model_client,
             stats=stats,
+            session_log=log_file,
         )
         runner.start()
         try:
@@ -136,12 +150,14 @@ def main(argv: list[str] | None = None) -> None:
                     args.max_questions is not None
                     and stats.questions_answered >= args.max_questions
                 ):
-                    runner.stop()
+                    break
         except KeyboardInterrupt:
             pass
         finally:
             runner.stop()
             runner.join()
+            if log_file:
+                log_file.close()
 
 
 if __name__ == "__main__":

@@ -10,9 +10,11 @@ project and in the unit tests.
 
 from __future__ import annotations
 
+import json
 import re
 import time
-from typing import Any, Sequence
+from datetime import datetime
+from typing import Any, Sequence, TextIO
 
 try:  # pragma: no cover - optional heavy dependency
     import pyautogui  # type: ignore
@@ -148,6 +150,7 @@ def answer_question(
     stats: Stats | None = None,
     poll_interval: float = 0.5,
     client: ModelClientProtocol | None = None,
+    session_log: TextIO | None = None,
 ) -> str:
     """Send ``quiz_image`` to a model and click the chosen answer.
 
@@ -157,17 +160,14 @@ def answer_question(
     question and option text are forwarded to ``client.ask``.
     """
     start = time.time()
-    if client is None:
-        send_to_chatgpt(quiz_image, chatgpt_box)
-        response = read_chatgpt_response(response_region, poll_interval=poll_interval)
-        matches = re.findall(r"[A-D]", response.upper())
-        letter = matches[-1] if matches else ""
-    else:
+    ocr_text = ""
+    option_texts: list[str] = []
+    question_text = ""
+    if client is not None or session_log is not None:
         ocr_backend = ocr.get_backend(settings.ocr_backend)
-        text = ocr_backend(quiz_image)
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        ocr_text = ocr_backend(quiz_image)
+        lines = [line.strip() for line in ocr_text.splitlines() if line.strip()]
         question_lines: list[str] = []
-        option_texts: list[str] = []
         valid_letters = {o.upper() for o in options}
         for line in lines:
             match = re.match(r"([A-Za-z])[).:-]?\s*(.*)", line)
@@ -176,6 +176,13 @@ def answer_question(
             else:
                 question_lines.append(line)
         question_text = " ".join(question_lines)
+
+    if client is None:
+        send_to_chatgpt(quiz_image, chatgpt_box)
+        response = read_chatgpt_response(response_region, poll_interval=poll_interval)
+        matches = re.findall(r"[A-D]", response.upper())
+        letter = matches[-1] if matches else ""
+    else:
         response = ""
         letter = client.ask(question_text, option_texts).upper()
 
@@ -190,9 +197,22 @@ def answer_question(
     click_option(option_base, idx)
     logger.info("ChatGPT chose %s", letter)
 
+    duration = time.time() - start
+    tokens = len(response.split()) if response else 0
     if stats is not None:
-        duration = time.time() - start
-        tokens = len(response.split()) if response else 0
         stats.record(duration, tokens)
+
+    if session_log is not None:
+        record = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "ocr_text": ocr_text,
+            "options": option_texts,
+            "letter": letter,
+            "duration": duration,
+            "tokens": tokens,
+        }
+        json.dump(record, session_log)
+        session_log.write("\n")
+        session_log.flush()
 
     return letter

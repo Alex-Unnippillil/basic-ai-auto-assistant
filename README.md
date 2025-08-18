@@ -82,7 +82,7 @@ import pyautogui
 cfg = Settings()
 options = list("ABCD")
 
-img = pyautogui.screenshot(cfg.quiz_region)
+img = pyautogui.screenshot(region=cfg.quiz_region.as_tuple())
 letter = answer_question(
     img,
     cfg.chat_box,

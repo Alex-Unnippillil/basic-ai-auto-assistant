@@ -43,13 +43,24 @@ class QuizRunner(threading.Thread):
         self.option_base = option_base
         self.model_client = model_client
         self.stop_flag = threading.Event()
+        self.pause_flag = threading.Event()
         self.stats = stats or Stats()
         self.gui = gui
+        if self.gui is not None:
+            self.gui.connect_runner(self)
         self.poll_interval = poll_interval
 
     def stop(self) -> None:
         """Signal the runner to stop."""
         self.stop_flag.set()
+
+    def pause(self) -> None:
+        """Pause processing of new questions."""
+        self.pause_flag.set()
+
+    def resume(self) -> None:
+        """Resume processing after :meth:`pause`."""
+        self.pause_flag.clear()
 
     # The behaviour of this method is tested indirectly via unit tests that
     # patch :func:`answer_question`, so it is excluded from coverage
@@ -59,6 +70,9 @@ class QuizRunner(threading.Thread):
 
         def capture() -> None:
             while not self.stop_flag.is_set():
+                if self.pause_flag.is_set():
+                    time.sleep(0.05)
+                    continue
                 if q.empty():
                     img = automation.pyautogui.screenshot(self.quiz_region.as_tuple())
                     q.put(img)
@@ -67,6 +81,9 @@ class QuizRunner(threading.Thread):
 
         def worker() -> None:
             while not self.stop_flag.is_set() or not q.empty():
+                if self.pause_flag.is_set():
+                    time.sleep(0.05)
+                    continue
                 try:
                     img = q.get(timeout=0.1)
                 except queue.Empty:

@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> None:
                     if not runner.is_alive():
                         break
                     if (
-                        args.max_questions is not None
+                        args.max_questions
                         and stats.questions_answered >= args.max_questions
                     ):
                         runner.stop()
@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None) -> None:
                 if not runner.is_alive():
                     break
                 if (
-                    args.max_questions is not None
+                    args.max_questions
                     and stats.questions_answered >= args.max_questions
                 ):
                     runner.stop()

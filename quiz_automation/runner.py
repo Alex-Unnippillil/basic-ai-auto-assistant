@@ -5,6 +5,7 @@ from __future__ import annotations
 import queue
 import threading
 import time
+from pathlib import Path
 from typing import Sequence
 
 from . import automation
@@ -33,6 +34,7 @@ class QuizRunner(threading.Thread):
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
         poll_interval: float = 0.5,
+        screenshot_dir: Path | str | None = None,
     ) -> None:
         """Initialise the runner thread."""
         super().__init__(daemon=True)
@@ -46,6 +48,7 @@ class QuizRunner(threading.Thread):
         self.stats = stats or Stats()
         self.gui = gui
         self.poll_interval = poll_interval
+        self.screenshot_dir = Path(screenshot_dir) if screenshot_dir is not None else None
 
     def stop(self) -> None:
         """Signal the runner to stop."""
@@ -81,6 +84,7 @@ class QuizRunner(threading.Thread):
                         stats=self.stats,
                         poll_interval=self.poll_interval,
                         client=self.model_client,
+                        screenshot_dir=self.screenshot_dir,
                     )
                 except Exception:
                     logger.exception("Error while answering question")

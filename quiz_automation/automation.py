@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 import time
+from pathlib import Path
 from typing import Any, Sequence
 
 try:  # pragma: no cover - optional heavy dependency
@@ -148,6 +149,7 @@ def answer_question(
     stats: Stats | None = None,
     poll_interval: float = 0.5,
     client: ModelClientProtocol | None = None,
+    screenshot_dir: Path | str | None = None,
 ) -> str:
     """Send ``quiz_image`` to a model and click the chosen answer.
 
@@ -157,6 +159,16 @@ def answer_question(
     question and option text are forwarded to ``client.ask``.
     """
     start = time.time()
+    if screenshot_dir is not None:
+        path = Path(screenshot_dir)
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            counter = getattr(answer_question, "_screenshot_counter", 0) + 1
+            answer_question._screenshot_counter = counter
+            filename = path / f"{counter:04d}.png"
+            quiz_image.save(filename)
+        except Exception:
+            logger.exception("Failed to save screenshot")
     if client is None:
         send_to_chatgpt(quiz_image, chatgpt_box)
         response = read_chatgpt_response(response_region, poll_interval=poll_interval)

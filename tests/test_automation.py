@@ -1,4 +1,5 @@
 import types
+from pathlib import Path
 import pytest
 
 pytest.importorskip("pydantic_settings")
@@ -215,4 +216,35 @@ def test_answer_question_with_client(monkeypatch):
     assert letter == "C"
     assert clicks == [2]
     assert client.calls == [("What?", ["foo", "bar", "baz"])]
+
+
+def test_answer_question_saves_screenshot(monkeypatch, tmp_path):
+    class Img:
+        def __init__(self):
+            self.saved = None
+
+        def save(self, path):
+            self.saved = Path(path)
+            self.saved.write_bytes(b"data")
+
+    monkeypatch.setattr(automation, "send_to_chatgpt", lambda *a, **k: None)
+    monkeypatch.setattr(automation, "read_chatgpt_response", lambda *a, **k: "A")
+    monkeypatch.setattr(automation, "click_option", lambda *a, **k: None)
+
+    if hasattr(automation.answer_question, "_screenshot_counter"):
+        delattr(automation.answer_question, "_screenshot_counter")
+
+    img = Img()
+    letter = automation.answer_question(
+        img,
+        Point(0, 0),
+        Region(0, 0, 1, 1),
+        ["A", "B"],
+        Point(0, 0),
+        screenshot_dir=tmp_path,
+    )
+
+    assert letter == "A"
+    assert img.saved == tmp_path / "0001.png"
+    assert img.saved.exists()
 

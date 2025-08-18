@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+from pathlib import Path
 
 from quiz_automation import QuizGUI
 from quiz_automation.runner import QuizRunner
@@ -54,11 +55,18 @@ def main(argv: list[str] | None = None) -> None:
         type=float,
         help="Sampling temperature for the ChatGPT model",
     )
+    parser.add_argument(
+        "--save-screenshots",
+        metavar="DIR",
+        help="Directory to save quiz screenshots",
+    )
     args = parser.parse_args(argv)
 
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
+
+    screenshot_dir = Path(args.save_screenshots) if args.save_screenshots else None
 
     if args.mode == "gui":
         gui = QuizGUI()
@@ -80,9 +88,11 @@ def main(argv: list[str] | None = None) -> None:
             gui=gui,
             model_client=model_client,
             stats=stats,
+            screenshot_dir=screenshot_dir,
         )
         runner.start()
         app = getattr(gui, "_app", None)
+        stopped = False
         try:
             if app is not None:
                 app.exec()
@@ -97,10 +107,12 @@ def main(argv: list[str] | None = None) -> None:
                         and stats.questions_answered >= args.max_questions
                     ):
                         runner.stop()
+                        stopped = True
         except KeyboardInterrupt:
             pass
         finally:
-            runner.stop()
+            if not stopped:
+                runner.stop()
             runner.join()
     else:
         cfg_kwargs = {"_env_file": args.config} if args.config else {}
@@ -125,9 +137,11 @@ def main(argv: list[str] | None = None) -> None:
 
             model_client=model_client,
             stats=stats,
+            screenshot_dir=screenshot_dir,
         )
         runner.start()
         try:
+            stopped = False
             while True:
                 runner.join(timeout=1)
                 if not runner.is_alive():
@@ -137,10 +151,12 @@ def main(argv: list[str] | None = None) -> None:
                     and stats.questions_answered >= args.max_questions
                 ):
                     runner.stop()
+                    stopped = True
         except KeyboardInterrupt:
             pass
         finally:
-            runner.stop()
+            if not stopped:
+                runner.stop()
             runner.join()
 
 

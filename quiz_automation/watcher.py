@@ -15,7 +15,7 @@ from .utils import hash_text
 logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
-    from mss import mss
+    import mss
 except Exception:  # pragma: no cover
     mss = None  # type: ignore
 

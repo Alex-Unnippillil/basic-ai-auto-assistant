@@ -45,7 +45,11 @@ def test_send_to_chatgpt_copy_failure(monkeypatch):
 def test_read_chatgpt_response_default_poll_interval(monkeypatch):
     """Default ``poll_interval`` of 0.5 seconds is used."""
 
-    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
+    monkeypatch.setattr(
+        automation,
+        "pyautogui",
+        types.SimpleNamespace(screenshot=lambda *, region: "img"),
+    )
     responses = iter(["", " hello "])
     monkeypatch.setattr(
         automation,
@@ -67,7 +71,11 @@ def test_read_chatgpt_response_default_poll_interval(monkeypatch):
 def test_read_chatgpt_response_timeout(monkeypatch):
     """If no text appears before timeout a ``TimeoutError`` is raised."""
 
-    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
+    monkeypatch.setattr(
+        automation,
+        "pyautogui",
+        types.SimpleNamespace(screenshot=lambda *, region: "img"),
+    )
     monkeypatch.setattr(automation, "pytesseract", types.SimpleNamespace(image_to_string=lambda img: ""))
     monkeypatch.setattr(automation, "validate_region", lambda region: None)
     monkeypatch.setattr(automation, "time", types.SimpleNamespace(time=iter([0, 0.6, 1.2]).__next__, sleep=lambda _: None))
@@ -79,7 +87,11 @@ def test_read_chatgpt_response_timeout(monkeypatch):
 def test_read_chatgpt_response_custom_poll_interval(monkeypatch):
     """A custom ``poll_interval`` is honoured."""
 
-    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
+    monkeypatch.setattr(
+        automation,
+        "pyautogui",
+        types.SimpleNamespace(screenshot=lambda *, region: "img"),
+    )
     responses = iter(["", " hello "])
     monkeypatch.setattr(
         automation,

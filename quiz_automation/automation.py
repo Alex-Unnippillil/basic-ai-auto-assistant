@@ -116,7 +116,7 @@ def read_chatgpt_response(
     validate_region(response_region)
     start = time.time()
     while time.time() - start < timeout:
-        img = pyautogui.screenshot(response_region.as_tuple())
+        img = pyautogui.screenshot(region=response_region.as_tuple())
         text = pytesseract.image_to_string(img).strip()
         if text:
             return text

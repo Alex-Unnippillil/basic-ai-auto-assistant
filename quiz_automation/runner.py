@@ -76,7 +76,9 @@ class QuizRunner(threading.Thread):
                     time.sleep(0.05)
                     continue
                 if q.empty():
-                    img = automation.pyautogui.screenshot(self.quiz_region.as_tuple())
+                    img = automation.pyautogui.screenshot(
+                        region=self.quiz_region.as_tuple()
+                    )
                     q.put(img)
                 else:
                     time.sleep(0.05)

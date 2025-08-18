@@ -10,7 +10,7 @@ from quiz_automation.types import Point, Region
 def test_runner_triggers_full_flow(monkeypatch):
     calls = {"screenshot": 0, "paste": 0, "read": 0, "click": 0}
 
-    def fake_screenshot(region=None):
+    def fake_screenshot(*, region=None):
         calls["screenshot"] += 1
         return "img"
 

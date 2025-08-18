@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     poll_interval: float = 1.0
     temperature: float = 0.0
     ocr_backend: str | None = None
+    ocr_lang: str | None = None
 
     quiz_region: Region = Region(100, 100, 600, 400)
     chat_box: Point = Point(800, 900)

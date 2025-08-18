@@ -163,7 +163,7 @@ def answer_question(
         matches = re.findall(r"[A-D]", response.upper())
         letter = matches[-1] if matches else ""
     else:
-        ocr_backend = ocr.get_backend(settings.ocr_backend)
+        ocr_backend = ocr.get_backend(settings.ocr_backend, lang=settings.ocr_lang)
         text = ocr_backend(quiz_image)
         lines = [line.strip() for line in text.splitlines() if line.strip()]
         question_lines: list[str] = []

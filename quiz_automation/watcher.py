@@ -44,7 +44,7 @@ class Watcher(threading.Thread):
         self.stop_flag = threading.Event()
         self.pause_flag = threading.Event()
         self._last_hash: str | None = None
-        self.ocr_backend = ocr or get_backend(cfg.ocr_backend)
+        self.ocr_backend = ocr or get_backend(cfg.ocr_backend, lang=cfg.ocr_lang)
 
     # -- basic helpers -------------------------------------------------
     def capture(self):

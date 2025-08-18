@@ -1,17 +1,18 @@
 """Command-line interface for quiz automation."""
+
 from __future__ import annotations
 
 import argparse
 import logging
 
 from quiz_automation import QuizGUI
-from quiz_automation.runner import QuizRunner
-from quiz_automation.config import Settings, settings as global_settings
-from quiz_automation.logger import configure_logger
 from quiz_automation.chatgpt_client import ChatGPTClient
+from quiz_automation.config import Settings
+from quiz_automation.config import settings as global_settings
+from quiz_automation.logger import configure_logger
 from quiz_automation.model_client import LocalModelClient
+from quiz_automation.runner import QuizRunner
 from quiz_automation.stats import Stats
-
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -54,8 +55,11 @@ def main(argv: list[str] | None = None) -> None:
         type=float,
         help="Sampling temperature for the ChatGPT model",
     )
+    parser.add_argument(
+        "--ocr-lang",
+        help="Language code to pass to the OCR backend",
+    )
     args = parser.parse_args(argv)
-
 
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
@@ -66,6 +70,9 @@ def main(argv: list[str] | None = None) -> None:
         if args.temperature is not None:
             cfg.temperature = args.temperature
             global_settings.temperature = args.temperature
+        if args.ocr_lang is not None:
+            cfg.ocr_lang = args.ocr_lang
+            global_settings.ocr_lang = args.ocr_lang
         options = list("ABCD")
         stats = Stats()
         model_client = (
@@ -106,10 +113,15 @@ def main(argv: list[str] | None = None) -> None:
         cfg_kwargs = {"_env_file": args.config} if args.config else {}
         if args.temperature is not None:
             cfg_kwargs["temperature"] = args.temperature
+        if args.ocr_lang is not None:
+            cfg_kwargs["ocr_lang"] = args.ocr_lang
         cfg = Settings(**cfg_kwargs)
         if args.temperature is not None:
             cfg.temperature = args.temperature
             global_settings.temperature = args.temperature
+        if args.ocr_lang is not None:
+            cfg.ocr_lang = args.ocr_lang
+            global_settings.ocr_lang = args.ocr_lang
         options = list("ABCD")
         stats = Stats()
         model_client = (
@@ -122,7 +134,6 @@ def main(argv: list[str] | None = None) -> None:
             cfg.response_region,
             options,
             cfg.option_base,
-
             model_client=model_client,
             stats=stats,
         )

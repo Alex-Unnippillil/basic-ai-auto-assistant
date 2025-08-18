@@ -6,6 +6,8 @@
 basic-ai-auto-assistant documentation
 =====================================
 
+Use the ``--ocr-lang`` option to set the language code for the OCR backend.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

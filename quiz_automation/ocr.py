@@ -23,7 +23,10 @@ class PytesseractOCR:
     """
 
     def __init__(self, lang: str | None = None) -> None:
-        """Initialize the backend with optional language code."""
+        """Initialize the backend with optional language code.
+
+        The code is forwarded to :func:`pytesseract.image_to_string`.
+        """
         self.lang = lang
 
     def __call__(self, img) -> str:  # pragma: no cover - requires optional deps
@@ -67,6 +70,9 @@ def get_backend(name: str | None = None, **kwargs: Any) -> OCRBackend:
     If *name* matches a registered backend the associated factory is invoked.
     Otherwise *name* is treated as an import path of the form
     ``'module:qualname'`` or ``'module.qualname'`` and imported dynamically.
+
+    Additional keyword arguments are forwarded to the backend constructor,
+    e.g. ``lang`` for :class:`PytesseractOCR`.
     """
     target = name or "pytesseract"
     factory = _BACKENDS.get(target)

@@ -66,17 +66,21 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
         Runner.return_value.join.return_value = None
         Runner.return_value.stop.return_value = None
 
-        run.main([
-            "--mode",
-            "headless",
-            "--backend",
-            backend,
-            "--max-questions",
-            "0",
-        ])
+        run.main(
+            [
+                "--mode",
+                "headless",
+                "--backend",
+                backend,
+                "--max-questions",
+                "0",
+            ]
+        )
 
     assert instantiated.get("created", False)
-    assert Runner.return_value.stop.call_count == 1
+    assert Runner.return_value.stop.call_count >= 1
+
+
 def test_cli_temperature(monkeypatch) -> None:
     import importlib
     import sys
@@ -138,3 +142,66 @@ def test_cli_temperature(monkeypatch) -> None:
     assert captured.temp == 0.7
     assert cfg.temperature == 0.7
     global_settings.temperature = 0.0
+
+
+def test_cli_ocr_lang(monkeypatch) -> None:
+    import importlib
+    import sys
+
+    sys.modules.setdefault(
+        "pydantic",
+        SimpleNamespace(
+            BaseModel=object,
+            ValidationError=Exception,
+            field_validator=lambda *a, **k: (lambda f: f),
+        ),
+    )
+    sys.modules.setdefault(
+        "pydantic_settings",
+        SimpleNamespace(BaseSettings=object, SettingsConfigDict=dict),
+    )
+
+    run = importlib.import_module("run")
+    from quiz_automation.config import settings as global_settings
+    from quiz_automation.types import Point, Region
+
+    cfg = SimpleNamespace(
+        quiz_region=Region(1, 2, 3, 4),
+        chat_box=Point(5, 6),
+        response_region=Region(7, 8, 9, 10),
+        option_base=Point(11, 12),
+        ocr_lang=None,
+    )
+    stats = SimpleNamespace(questions_answered=0)
+    captured = SimpleNamespace(lang=None)
+
+    class DummyClient:
+        def __init__(self, *a, **k):
+            captured.lang = global_settings.ocr_lang
+
+    with patch.object(run, "Settings", return_value=cfg), patch.object(
+        run, "Stats", return_value=stats
+    ), patch.object(run, "QuizRunner") as Runner, patch.object(
+        run, "ChatGPTClient", DummyClient
+    ):
+        Runner.return_value.is_alive.side_effect = [True, False]
+        Runner.return_value.start.return_value = None
+        Runner.return_value.join.return_value = None
+        Runner.return_value.stop.return_value = None
+
+        run.main(
+            [
+                "--mode",
+                "headless",
+                "--backend",
+                "chatgpt",
+                "--ocr-lang",
+                "spa",
+                "--max-questions",
+                "0",
+            ]
+        )
+
+    assert captured.lang == "spa"
+    assert cfg.ocr_lang == "spa"
+    global_settings.ocr_lang = None

@@ -1,4 +1,5 @@
 import types
+
 import pytest
 
 pytest.importorskip("pydantic_settings")
@@ -34,7 +35,11 @@ def test_send_to_chatgpt_success(monkeypatch):
 def test_send_to_chatgpt_copy_failure(monkeypatch):
     """If the image cannot be copied a ``RuntimeError`` is raised."""
 
-    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(moveTo=lambda *a, **k: None, hotkey=lambda *a, **k: None))
+    monkeypatch.setattr(
+        automation,
+        "pyautogui",
+        types.SimpleNamespace(moveTo=lambda *a, **k: None, hotkey=lambda *a, **k: None),
+    )
     monkeypatch.setattr(automation, "copy_image_to_clipboard", lambda img: False)
 
     with pytest.raises(RuntimeError):
@@ -44,7 +49,9 @@ def test_send_to_chatgpt_copy_failure(monkeypatch):
 def test_read_chatgpt_response_default_poll_interval(monkeypatch):
     """Default ``poll_interval`` of 0.5 seconds is used."""
 
-    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
+    monkeypatch.setattr(
+        automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img")
+    )
     responses = iter(["", " hello "])
     monkeypatch.setattr(
         automation,
@@ -66,10 +73,18 @@ def test_read_chatgpt_response_default_poll_interval(monkeypatch):
 def test_read_chatgpt_response_timeout(monkeypatch):
     """If no text appears before timeout a ``TimeoutError`` is raised."""
 
-    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
-    monkeypatch.setattr(automation, "pytesseract", types.SimpleNamespace(image_to_string=lambda img: ""))
+    monkeypatch.setattr(
+        automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img")
+    )
+    monkeypatch.setattr(
+        automation, "pytesseract", types.SimpleNamespace(image_to_string=lambda img: "")
+    )
     monkeypatch.setattr(automation, "validate_region", lambda region: None)
-    monkeypatch.setattr(automation, "time", types.SimpleNamespace(time=iter([0, 0.6, 1.2]).__next__, sleep=lambda _: None))
+    monkeypatch.setattr(
+        automation,
+        "time",
+        types.SimpleNamespace(time=iter([0, 0.6, 1.2]).__next__, sleep=lambda _: None),
+    )
 
     with pytest.raises(TimeoutError):
         automation.read_chatgpt_response(Region(0, 0, 1, 1), timeout=1.0)
@@ -78,7 +93,9 @@ def test_read_chatgpt_response_timeout(monkeypatch):
 def test_read_chatgpt_response_custom_poll_interval(monkeypatch):
     """A custom ``poll_interval`` is honoured."""
 
-    monkeypatch.setattr(automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img"))
+    monkeypatch.setattr(
+        automation, "pyautogui", types.SimpleNamespace(screenshot=lambda region: "img")
+    )
     responses = iter(["", " hello "])
     monkeypatch.setattr(
         automation,
@@ -185,8 +202,9 @@ def test_answer_question_with_client(monkeypatch):
             self.calls.append((question, options))
             return "C"
 
-    def fake_get_backend(name):
+    def fake_get_backend(name, lang=None):
         assert name is None
+        assert lang is None
 
         def backend(img):
             return "What?\nA foo\nB bar\nC baz"
@@ -205,14 +223,20 @@ def test_answer_question_with_client(monkeypatch):
         lambda *a, **k: (_ for _ in ()).throw(RuntimeError("should not be called")),
     )
     clicks: list[int] = []
-    monkeypatch.setattr(automation, "click_option", lambda base, idx, offset=40: clicks.append(idx))
+    monkeypatch.setattr(
+        automation, "click_option", lambda base, idx, offset=40: clicks.append(idx)
+    )
 
     client = DummyClient()
     letter = automation.answer_question(
-        "question", Point(0, 0), Region(0, 0, 1, 1), ["A", "B", "C"], Point(0, 0), client=client
+        "question",
+        Point(0, 0),
+        Region(0, 0, 1, 1),
+        ["A", "B", "C"],
+        Point(0, 0),
+        client=client,
     )
 
     assert letter == "C"
     assert clicks == [2]
     assert client.calls == [("What?", ["foo", "bar", "baz"])]
-

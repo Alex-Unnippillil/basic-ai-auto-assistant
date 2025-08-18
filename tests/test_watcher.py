@@ -1,5 +1,4 @@
 import logging
-import logging
 import time
 from queue import Queue
 
@@ -7,12 +6,12 @@ import pytest
 
 pytest.importorskip("pydantic_settings")
 
+import quiz_automation.ocr as ocr_module
 from quiz_automation import watcher as watcher_module
 from quiz_automation.config import Settings
-import quiz_automation.ocr as ocr_module
 from quiz_automation.ocr import PytesseractOCR
-from quiz_automation.watcher import Watcher
 from quiz_automation.types import Region
+from quiz_automation.watcher import Watcher
 
 
 class DummyMSS:
@@ -22,15 +21,30 @@ class DummyMSS:
 
 def test_default_ocr_backend(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "x")
-    monkeypatch.setattr(watcher_module, "_mss", lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})())
+    monkeypatch.setattr(
+        watcher_module,
+        "_mss",
+        lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})(),
+    )
     cfg = Settings()
     w = Watcher(Region(0, 0, 1, 1), Queue(), cfg)
     assert isinstance(w.ocr_backend, PytesseractOCR)
 
 
+def test_invalid_region_raises_value_error(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    cfg = Settings()
+    with pytest.raises(ValueError):
+        Watcher(Region(0, 0, 0, 1), Queue(), cfg)
+
+
 def test_configured_ocr_backend(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "x")
-    monkeypatch.setattr(watcher_module, "_mss", lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})())
+    monkeypatch.setattr(
+        watcher_module,
+        "_mss",
+        lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})(),
+    )
     monkeypatch.setattr(ocr_module, "_BACKENDS", dict(ocr_module._BACKENDS))
 
     class DummyBackend:
@@ -45,7 +59,11 @@ def test_configured_ocr_backend(monkeypatch):
 
 def test_watcher_is_new_question(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "x")
-    monkeypatch.setattr(watcher_module, "_mss", lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})())
+    monkeypatch.setattr(
+        watcher_module,
+        "_mss",
+        lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})(),
+    )
     cfg = Settings()
     w = Watcher(Region(0, 0, 1, 1), Queue(), cfg)
     assert w.is_new_question("Q1") is True
@@ -54,7 +72,11 @@ def test_watcher_is_new_question(monkeypatch):
 
 def test_watcher_emits_event(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "x")
-    monkeypatch.setattr(watcher_module, "_mss", lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})())
+    monkeypatch.setattr(
+        watcher_module,
+        "_mss",
+        lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})(),
+    )
     cfg = Settings()
     q: Queue = Queue()
     w = Watcher(Region(0, 0, 1, 1), q, cfg, ocr=lambda img: "text")
@@ -73,7 +95,11 @@ def test_watcher_emits_event(monkeypatch):
 
 def test_watcher_pause_resume(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "x")
-    monkeypatch.setattr(watcher_module, "_mss", lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})())
+    monkeypatch.setattr(
+        watcher_module,
+        "_mss",
+        lambda: type("S", (), {"mss": lambda self=None: DummyMSS()})(),
+    )
     cfg = Settings()
     q: Queue = Queue()
     w = Watcher(Region(0, 0, 1, 1), q, cfg, ocr=lambda img: "text")

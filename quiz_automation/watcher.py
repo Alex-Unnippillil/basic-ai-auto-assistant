@@ -10,7 +10,7 @@ from queue import Queue
 from .config import Settings
 from .ocr import OCRBackend, get_backend
 from .types import Region
-from .utils import hash_text
+from .utils import hash_text, validate_region
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ class Watcher(threading.Thread):
     ) -> None:
         """Initialize the watcher thread."""
         super().__init__(daemon=True)
+        validate_region(region)
         self.region = region
         self.queue = queue
         self.cfg = cfg

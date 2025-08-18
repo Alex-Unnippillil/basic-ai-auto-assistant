@@ -13,6 +13,18 @@ from quiz_automation.model_client import LocalModelClient
 from quiz_automation.stats import Stats
 
 
+def _update_global_settings(cfg: Settings) -> None:
+    """Propagate relevant configuration values to the global settings."""
+    for attr in (
+        "openai_api_key",
+        "openai_model",
+        "openai_system_prompt",
+        "temperature",
+        "ocr_backend",
+    ):
+        setattr(global_settings, attr, getattr(cfg, attr, getattr(global_settings, attr)))
+
+
 
 def main(argv: list[str] | None = None) -> None:
     """Run the quiz automation tool.
@@ -75,7 +87,7 @@ def main(argv: list[str] | None = None) -> None:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         if args.temperature is not None:
             cfg.temperature = args.temperature
-            global_settings.temperature = args.temperature
+        _update_global_settings(cfg)
         options = list("ABCD")
         stats = Stats()
         model_client = (
@@ -122,7 +134,7 @@ def main(argv: list[str] | None = None) -> None:
         cfg = Settings(**cfg_kwargs)
         if args.temperature is not None:
             cfg.temperature = args.temperature
-            global_settings.temperature = args.temperature
+        _update_global_settings(cfg)
         options = list("ABCD")
         stats = Stats()
         model_client = (

@@ -102,3 +102,25 @@ def test_capture_missing_mss_logs_and_raises(monkeypatch, caplog):
         with pytest.raises(RuntimeError, match="mss"):
             w.capture()
     assert "Failed to obtain mss instance" in caplog.text
+
+
+def test_capture_passes_dict(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    captured = {}
+
+    class RecordingMSS(DummyMSS):
+        def grab(self, bbox):
+            nonlocal captured
+            captured = bbox
+            return super().grab(bbox)
+
+    monkeypatch.setattr(
+        watcher_module,
+        "_mss",
+        lambda: type("S", (), {"mss": lambda self=None: RecordingMSS()})(),
+    )
+    cfg = Settings()
+    w = Watcher(Region(1, 2, 3, 4), Queue(), cfg)
+    w.capture()
+    assert captured == {"left": 1, "top": 2, "width": 3, "height": 4}
+    assert isinstance(captured, dict)

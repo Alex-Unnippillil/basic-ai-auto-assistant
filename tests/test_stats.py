@@ -30,4 +30,26 @@ def test_record_error_increments_error_counter() -> None:
     assert stats.errors == 2
 
 
+def test_thread_safe_updates_with_multiple_threads() -> None:
+    """Ensure concurrent updates are aggregated correctly."""
+    stats = Stats()
+
+    record_inputs = [(1.0, 10), (2.0, 20), (3.0, 30)]
+    error_threads = 4
+
+    threads = [Thread(target=stats.record, args=ri) for ri in record_inputs]
+    threads.extend(Thread(target=stats.record_error) for _ in range(error_threads))
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    assert stats.questions_answered == len(record_inputs)
+    assert stats.total_time == pytest.approx(sum(d for d, _ in record_inputs))
+    assert stats.total_tokens == sum(t for _, t in record_inputs)
+    assert stats.errors == error_threads
+
+
 

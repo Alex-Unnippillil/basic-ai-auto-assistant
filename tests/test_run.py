@@ -39,7 +39,7 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
         SimpleNamespace(BaseSettings=object, SettingsConfigDict=dict),
     )
 
-    _run = importlib.import_module("run")
+    run = importlib.import_module("run")
     from quiz_automation.types import Point, Region
 
     # Dummy configuration and stats objects returned by patched factories
@@ -49,8 +49,34 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
         response_region=Region(7, 8, 9, 10),
         option_base=Point(11, 12),
     )
+    stats = SimpleNamespace(questions_answered=0)
+    instantiated = {}
 
+    class DummyClient:
+        def __init__(self, *a, **k):
+            instantiated["created"] = True
 
+    with patch.object(run, "Settings", return_value=_cfg), patch.object(
+        run, "Stats", return_value=stats
+    ), patch.object(run, "QuizRunner") as Runner, patch.object(
+        run, client_attr, DummyClient
+    ):
+        Runner.return_value.is_alive.side_effect = [True, False]
+        Runner.return_value.start.return_value = None
+        Runner.return_value.join.return_value = None
+        Runner.return_value.stop.return_value = None
+
+        run.main([
+            "--mode",
+            "headless",
+            "--backend",
+            backend,
+            "--max-questions",
+            "0",
+        ])
+
+    assert instantiated.get("created", False)
+    assert Runner.return_value.stop.call_count == 1
 def test_cli_temperature(monkeypatch) -> None:
     import importlib
     import sys

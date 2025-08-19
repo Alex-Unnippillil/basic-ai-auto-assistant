@@ -75,7 +75,13 @@ def main(argv: list[str] | None = None) -> None:
         cfg = Settings(_env_file=args.config) if args.config else Settings()
         if args.temperature is not None:
             cfg.temperature = args.temperature
-            global_settings.temperature = args.temperature
+        for attr in (
+            "openai_model",
+            "openai_system_prompt",
+            "ocr_backend",
+            "temperature",
+        ):
+            setattr(global_settings, attr, getattr(cfg, attr))
         options = list("ABCD")
         stats = Stats()
         model_client = (
@@ -120,9 +126,13 @@ def main(argv: list[str] | None = None) -> None:
         if args.temperature is not None:
             cfg_kwargs["temperature"] = args.temperature
         cfg = Settings(**cfg_kwargs)
-        if args.temperature is not None:
-            cfg.temperature = args.temperature
-            global_settings.temperature = args.temperature
+        for attr in (
+            "openai_model",
+            "openai_system_prompt",
+            "ocr_backend",
+            "temperature",
+        ):
+            setattr(global_settings, attr, getattr(cfg, attr))
         options = list("ABCD")
         stats = Stats()
         model_client = (

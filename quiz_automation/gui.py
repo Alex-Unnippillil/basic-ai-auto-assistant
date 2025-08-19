@@ -15,10 +15,11 @@ try:  # pragma: no cover - optional graphical dependency
         QLabel,
         QPushButton,
         QVBoxLayout,
+        QHBoxLayout,
         QWidget,
     )
 except Exception:  # pragma: no cover - fall back when Qt is unavailable
-    QApplication = QLabel = QPushButton = QVBoxLayout = QWidget = None  # type: ignore
+    QApplication = QLabel = QPushButton = QVBoxLayout = QHBoxLayout = QWidget = None  # type: ignore
 
 
 class QuizGUI:
@@ -55,6 +56,13 @@ class QuizGUI:
 
         self._app = QApplication.instance() or QApplication([])
         self._window = QWidget()
+        self._window.setStyleSheet(
+            """
+            QWidget { font-size: 14px; padding: 8px; }
+            QPushButton { padding: 4px 8px; }
+            QLabel { padding: 2px 4px; }
+            """
+        )
         layout = QVBoxLayout(self._window)
         self._label = QLabel("Ready")
         layout.addWidget(self._label)
@@ -66,9 +74,14 @@ class QuizGUI:
         self._pause_btn.clicked.connect(self._emit_pause)
         self._resume_btn.clicked.connect(self._emit_resume)
         self._stop_btn.clicked.connect(self._emit_stop)
-        layout.addWidget(self._pause_btn)
-        layout.addWidget(self._resume_btn)
-        layout.addWidget(self._stop_btn)
+
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(5, 5, 5, 5)
+        button_layout.setSpacing(8)
+        button_layout.addWidget(self._pause_btn)
+        button_layout.addWidget(self._resume_btn)
+        button_layout.addWidget(self._stop_btn)
+        layout.addLayout(button_layout)
 
         self._window.setWindowTitle("Quiz Stats")
         self._window.show()

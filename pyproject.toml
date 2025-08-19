@@ -13,6 +13,7 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
     "mss",
+    "sqlalchemy",
 ]
 
 [project.optional-dependencies]

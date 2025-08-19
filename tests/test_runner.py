@@ -1,5 +1,19 @@
+from types import SimpleNamespace
+import sys
 import pytest
 
+# Provide minimal stubs for optional dependencies so tests run in isolation
+sys.modules.setdefault(
+    "pydantic",
+    SimpleNamespace(
+        BaseModel=object,
+        ValidationError=Exception,
+        field_validator=lambda *a, **k: (lambda f: f),
+    ),
+)
+sys.modules.setdefault(
+    "pydantic_settings", SimpleNamespace(BaseSettings=object, SettingsConfigDict=dict)
+)
 pytest.importorskip("pydantic_settings")
 
 from quiz_automation.runner import QuizRunner
@@ -34,19 +48,17 @@ def test_runner_triggers_full_flow(monkeypatch):
 
     monkeypatch.setattr(automation, "click_option", fake_click)
 
-    runner = QuizRunner(Region(0, 0, 10, 10), Point(0, 0), Region(0, 0, 10, 10), ["A", "B"], Point(0, 0))
-
-    orig = automation.answer_question
-
-    def wrapped(*args, **kwargs):
-        result = orig(*args, **kwargs)
-        runner.stop()
-        return result
-
-    monkeypatch.setattr(automation, "answer_question", wrapped)
-    monkeypatch.setattr("quiz_automation.runner.answer_question", wrapped)
+    runner = QuizRunner(
+        Region(0, 0, 10, 10),
+        Point(0, 0),
+        Region(0, 0, 10, 10),
+        ["A", "B"],
+        Point(0, 0),
+        max_questions=1,
+    )
 
     runner.start()
     runner.join(timeout=1)
 
     assert calls == {"screenshot": 1, "paste": 1, "read": 1, "click": 1}
+    assert runner.stats.questions_answered == 1

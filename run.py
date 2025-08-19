@@ -96,6 +96,7 @@ def main(argv: list[str] | None = None) -> None:
             gui=gui,
             model_client=model_client,
             stats=stats,
+            max_questions=args.max_questions,
             session_log=log_file,
         )
         runner.start()
@@ -108,11 +109,6 @@ def main(argv: list[str] | None = None) -> None:
                 while True:
                     runner.join(timeout=1)
                     if not runner.is_alive():
-                        break
-                    if (
-                        args.max_questions
-                        and stats.questions_answered >= args.max_questions
-                    ):
                         break
         except KeyboardInterrupt:
             pass
@@ -148,6 +144,7 @@ def main(argv: list[str] | None = None) -> None:
 
             model_client=model_client,
             stats=stats,
+            max_questions=args.max_questions,
             session_log=log_file,
         )
         runner.start()
@@ -155,11 +152,6 @@ def main(argv: list[str] | None = None) -> None:
             while True:
                 runner.join(timeout=1)
                 if not runner.is_alive():
-                    break
-                if (
-                    args.max_questions
-                    and stats.questions_answered >= args.max_questions
-                ):
                     break
         except KeyboardInterrupt:
             pass

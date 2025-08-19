@@ -87,6 +87,79 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
     global_settings.openai_system_prompt = "Reply with JSON {'answer':'A|B|C|D'}"
     global_settings.ocr_backend = None
     global_settings.temperature = 0.0
+=======
+    assert Runner.call_args.kwargs["max_questions"] == 0
+
+
+@pytest.mark.parametrize(
+    "backend, client_attr",
+    [
+        ("chatgpt", "ChatGPTClient"),
+        ("local", "LocalModelClient"),
+    ],
+)
+def test_cli_gui_mode_passes_gui_and_stops(backend: str, client_attr: str) -> None:
+    """Ensure GUI mode constructs the runner with a GUI instance and stops."""
+
+    import importlib
+    import sys
+
+    sys.modules.setdefault(
+        "pydantic",
+        SimpleNamespace(
+            BaseModel=object,
+            ValidationError=Exception,
+            field_validator=lambda *a, **k: (lambda f: f),
+        ),
+    )
+    sys.modules.setdefault(
+        "pydantic_settings",
+        SimpleNamespace(BaseSettings=object, SettingsConfigDict=dict),
+    )
+
+    run = importlib.import_module("run")
+    from quiz_automation.types import Point, Region
+
+    _cfg = SimpleNamespace(
+        quiz_region=Region(1, 2, 3, 4),
+        chat_box=Point(5, 6),
+        response_region=Region(7, 8, 9, 10),
+        option_base=Point(11, 12),
+    )
+    stats = SimpleNamespace(questions_answered=0)
+    instantiated = {}
+
+    class DummyClient:
+        def __init__(self, *a, **k):
+            instantiated["created"] = True
+
+    class DummyGUI:
+        def __init__(self):
+            self._app = None
+
+    with patch.object(run, "Settings", return_value=_cfg), patch.object(
+        run, "Stats", return_value=stats
+    ), patch.object(run, "QuizRunner") as Runner, patch.object(
+        run, client_attr, DummyClient
+    ), patch.object(run, "QuizGUI", DummyGUI):
+        Runner.return_value.is_alive.side_effect = [True, False]
+        Runner.return_value.start.return_value = None
+        Runner.return_value.join.return_value = None
+        Runner.return_value.stop.return_value = None
+
+        run.main([
+            "--mode",
+            "gui",
+            "--backend",
+            backend,
+            "--max-questions",
+            "0",
+        ])
+
+    assert instantiated.get("created", False)
+    assert Runner.return_value.stop.call_count == 1
+    assert Runner.call_args.kwargs["gui"] is not None
+    assert Runner.call_args.kwargs["max_questions"] == 0
 def test_cli_temperature(monkeypatch) -> None:
     import importlib
     import sys

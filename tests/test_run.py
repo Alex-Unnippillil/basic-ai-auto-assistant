@@ -72,14 +72,16 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
         Runner.return_value.join.return_value = None
         Runner.return_value.stop.return_value = None
 
-        run.main([
-            "--mode",
-            "headless",
-            "--backend",
-            backend,
-            "--max-questions",
-            "0",
-        ])
+        run.main(
+            [
+                "--mode",
+                "headless",
+                "--backend",
+                backend,
+                "--max-questions",
+                "0",
+            ]
+        )
 
     assert instantiated.get("created", False)
     assert Runner.return_value.stop.call_count == 1
@@ -87,7 +89,6 @@ def test_cli_uses_selected_backend_and_stops(backend: str, client_attr: str) -> 
     global_settings.openai_system_prompt = "Reply with JSON {'answer':'A|B|C|D'}"
     global_settings.ocr_backend = None
     global_settings.temperature = 0.0
-=======
     assert Runner.call_args.kwargs["max_questions"] == 0
 
 
@@ -125,6 +126,10 @@ def test_cli_gui_mode_passes_gui_and_stops(backend: str, client_attr: str) -> No
         chat_box=Point(5, 6),
         response_region=Region(7, 8, 9, 10),
         option_base=Point(11, 12),
+        openai_model="dummy-model",
+        openai_system_prompt="dummy-prompt",
+        ocr_backend="dummy-ocr",
+        temperature=0.0,
     )
     stats = SimpleNamespace(questions_answered=0)
     instantiated = {}
@@ -141,25 +146,31 @@ def test_cli_gui_mode_passes_gui_and_stops(backend: str, client_attr: str) -> No
         run, "Stats", return_value=stats
     ), patch.object(run, "QuizRunner") as Runner, patch.object(
         run, client_attr, DummyClient
-    ), patch.object(run, "QuizGUI", DummyGUI):
+    ), patch.object(
+        run, "QuizGUI", DummyGUI
+    ):
         Runner.return_value.is_alive.side_effect = [True, False]
         Runner.return_value.start.return_value = None
         Runner.return_value.join.return_value = None
         Runner.return_value.stop.return_value = None
 
-        run.main([
-            "--mode",
-            "gui",
-            "--backend",
-            backend,
-            "--max-questions",
-            "0",
-        ])
+        run.main(
+            [
+                "--mode",
+                "gui",
+                "--backend",
+                backend,
+                "--max-questions",
+                "0",
+            ]
+        )
 
     assert instantiated.get("created", False)
     assert Runner.return_value.stop.call_count == 1
     assert Runner.call_args.kwargs["gui"] is not None
     assert Runner.call_args.kwargs["max_questions"] == 0
+
+
 def test_cli_temperature(monkeypatch) -> None:
     import importlib
     import sys
@@ -280,14 +291,16 @@ def test_cli_propagates_settings_to_global() -> None:
         Runner.return_value.join.return_value = None
         Runner.return_value.stop.return_value = None
 
-        run.main([
-            "--mode",
-            "headless",
-            "--backend",
-            "chatgpt",
-            "--max-questions",
-            "0",
-        ])
+        run.main(
+            [
+                "--mode",
+                "headless",
+                "--backend",
+                "chatgpt",
+                "--max-questions",
+                "0",
+            ]
+        )
 
     assert global_settings.openai_model == "model-x"
     assert global_settings.openai_system_prompt == "prompt-y"

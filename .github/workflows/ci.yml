@@ -41,4 +41,12 @@ jobs:
           pip install -e .
           pip install pytest pytest-cov
       - name: Run tests
+        run: pytest
 
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker build -f server/Dockerfile .

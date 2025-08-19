@@ -13,6 +13,7 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
     "mss",
+    "requests",
 ]
 
 [project.optional-dependencies]

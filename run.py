@@ -1,17 +1,18 @@
 """Command-line interface for quiz automation."""
+
 from __future__ import annotations
 
 import argparse
 import logging
 
 from quiz_automation import QuizGUI
-from quiz_automation.runner import QuizRunner
-from quiz_automation.config import Settings, settings as global_settings
-from quiz_automation.logger import configure_logger
 from quiz_automation.chatgpt_client import ChatGPTClient
-from quiz_automation.model_client import LocalModelClient
+from quiz_automation.config import Settings
+from quiz_automation.config import settings as global_settings
+from quiz_automation.logger import configure_logger
+from quiz_automation.model_client import LocalModelClient, RemoteModelClient
+from quiz_automation.runner import QuizRunner
 from quiz_automation.stats import Stats
-
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -45,7 +46,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "--backend",
-        choices=["chatgpt", "local"],
+        choices=["chatgpt", "local", "remote"],
         default="chatgpt",
         help="Model backend to use for answering questions",
     )
@@ -60,14 +61,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
-
     level = getattr(logging, args.log_level.upper(), logging.INFO)
     configure_logger(level=level)
 
     log_file = (
-        open(args.session_log, "a", encoding="utf-8")
-        if args.session_log
-        else None
+        open(args.session_log, "a", encoding="utf-8") if args.session_log else None
     )
 
     if args.mode == "gui":
@@ -84,9 +82,12 @@ def main(argv: list[str] | None = None) -> None:
             setattr(global_settings, attr, getattr(cfg, attr))
         options = list("ABCD")
         stats = Stats()
-        model_client = (
-            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
-        )
+        if args.backend == "chatgpt":
+            model_client = ChatGPTClient()
+        elif args.backend == "remote":
+            model_client = RemoteModelClient()
+        else:
+            model_client = LocalModelClient()
         runner = QuizRunner(
             cfg.quiz_region,
             cfg.chat_box,
@@ -131,9 +132,12 @@ def main(argv: list[str] | None = None) -> None:
             setattr(global_settings, attr, getattr(cfg, attr))
         options = list("ABCD")
         stats = Stats()
-        model_client = (
-            ChatGPTClient() if args.backend == "chatgpt" else LocalModelClient()
-        )
+        if args.backend == "chatgpt":
+            model_client = ChatGPTClient()
+        elif args.backend == "remote":
+            model_client = RemoteModelClient()
+        else:
+            model_client = LocalModelClient()
 
         runner = QuizRunner(
             cfg.quiz_region,
@@ -141,7 +145,6 @@ def main(argv: list[str] | None = None) -> None:
             cfg.response_region,
             options,
             cfg.option_base,
-
             model_client=model_client,
             stats=stats,
             max_questions=args.max_questions,

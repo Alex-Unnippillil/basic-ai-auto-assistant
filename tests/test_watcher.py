@@ -15,7 +15,11 @@ from quiz_automation.watcher import Watcher
 
 
 class DummyMSS:
+    def __init__(self):
+        self.last_bbox = None
+
     def grab(self, bbox):
+        self.last_bbox = bbox
         return [[0]]  # minimal placeholder
 
 
@@ -29,6 +33,22 @@ def test_default_ocr_backend(monkeypatch):
     cfg = Settings()
     w = Watcher(Region(0, 0, 1, 1), Queue(), cfg)
     assert isinstance(w.ocr_backend, PytesseractOCR)
+
+
+def test_capture_passes_dict_to_grab(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+
+    dummy = DummyMSS()
+    monkeypatch.setattr(
+        watcher_module,
+        "_mss",
+        lambda: type("S", (), {"mss": lambda self=None: dummy})(),
+    )
+
+    cfg = Settings()
+    w = Watcher(Region(1, 2, 3, 4), Queue(), cfg)
+    w.capture()
+    assert dummy.last_bbox == {"left": 1, "top": 2, "width": 3, "height": 4}
 
 
 def test_invalid_region_raises_value_error(monkeypatch):

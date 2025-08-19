@@ -9,8 +9,7 @@ from queue import Queue
 
 from .config import Settings
 from .ocr import OCRBackend, get_backend
-from .types import Region
-from .utils import hash_text, validate_region
+from .utils import Region, hash_text, validate_region
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ class Watcher(threading.Thread):
 
     def __init__(
         self,
-        region: Region,
+        region: Region | tuple[int, int, int, int],
         queue: Queue,
         cfg: Settings,
         ocr: OCRBackend | None = None,
@@ -39,6 +38,8 @@ class Watcher(threading.Thread):
         """Initialize the watcher thread."""
         super().__init__(daemon=True)
         validate_region(region)
+        if not isinstance(region, Region):
+            region = Region(*region)
         self.region = region
         self.queue = queue
         self.cfg = cfg

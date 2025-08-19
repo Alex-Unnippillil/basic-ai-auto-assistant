@@ -38,6 +38,15 @@ def test_invalid_region_raises_value_error(monkeypatch):
         Watcher(Region(0, 0, 0, 1), Queue(), cfg)
 
 
+def test_tuple_region_validated_and_converted(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    cfg = Settings()
+    with pytest.raises(ValueError):
+        Watcher((0, 0, 0, 1), Queue(), cfg)
+    w = Watcher((0, 0, 1, 1), Queue(), cfg)
+    assert isinstance(w.region, Region)
+
+
 def test_configured_ocr_backend(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "x")
     monkeypatch.setattr(

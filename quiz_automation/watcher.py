@@ -56,7 +56,13 @@ class Watcher(threading.Thread):
         except Exception as exc:
             logger.exception("Failed to obtain mss instance")
             raise RuntimeError("Screen capture requires the 'mss' package") from exc
-        return mss_module.mss().grab(self.region.as_tuple())
+        bbox = {
+            "left": self.region.left,
+            "top": self.region.top,
+            "width": self.region.width,
+            "height": self.region.height,
+        }
+        return mss_module.mss().grab(bbox)
 
     def ocr(self, img) -> str:  # pragma: no cover - behaviour provided by backend
         """Return OCR text for *img* using the configured backend."""

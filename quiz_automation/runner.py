@@ -32,6 +32,7 @@ class QuizRunner(threading.Thread):
         model_client: ModelClientProtocol | None = None,
         stats: Stats | None = None,
         gui: QuizGUI | None = None,
+        max_questions: int | None = None,
         poll_interval: float = 0.5,
         session_log: TextIO | None = None,
     ) -> None:
@@ -51,6 +52,7 @@ class QuizRunner(threading.Thread):
             self.gui.connect_runner(self)
         self.poll_interval = poll_interval
         self.session_log = session_log
+        self.max_questions = max_questions
 
     def stop(self) -> None:
         """Signal the runner to stop."""
@@ -85,6 +87,12 @@ class QuizRunner(threading.Thread):
 
         def worker() -> None:
             while not self.stop_flag.is_set() or not q.empty():
+                if (
+                    self.max_questions is not None
+                    and self.stats.questions_answered >= self.max_questions
+                ):
+                    self.stop()
+                    break
                 if self.pause_flag.is_set():
                     time.sleep(0.05)
                     continue
@@ -110,6 +118,12 @@ class QuizRunner(threading.Thread):
                 finally:
                     if self.gui is not None:
                         self.gui.update(self.stats)
+                    if (
+                        self.max_questions is not None
+                        and self.stats.questions_answered >= self.max_questions
+                    ):
+                        self.stop()
+                        break
 
         t_capture = threading.Thread(target=capture, daemon=True)
         t_worker = threading.Thread(target=worker, daemon=True)

@@ -147,14 +147,23 @@ pip install -e .[full]
 
 ## Docker
 
-Build the image:
+The repository provides a `server/Dockerfile` for running the FastAPI service.
+
+Build the image with Docker Compose:
 
 ```bash
-docker build -t basic-ai-auto-assistant .
+docker compose build
 ```
 
-Run the container:
+Start the API along with a RabbitMQ broker and PostgreSQL database:
 
 ```bash
-docker run --rm basic-ai-auto-assistant
+docker compose up
+```
+
+The API will be available at `http://localhost:8000/health`. To build the image
+manually without Compose use:
+
+```bash
+docker build -f server/Dockerfile -t basic-ai-auto-assistant-api .
 ```

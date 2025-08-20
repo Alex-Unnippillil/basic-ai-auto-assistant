@@ -13,6 +13,10 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
     "mss",
+    "fastapi",
+    "celery",
+    "httpx",
+    "redis",
 ]
 
 [project.optional-dependencies]
